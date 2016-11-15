@@ -88,7 +88,7 @@ export class Mutator {
 			  documento: returnPatient.documento,
               nombre: returnPatient.nombre,
               apellido: returnPatient.apellido,
-              activo: returnPatient.activo,
+              //activo: returnPatient.activo,
               alias: returnPatient.alias,
               contacto: returnPatient.contacto,
               direccion: returnPatient.direccion,
@@ -98,11 +98,11 @@ export class Mutator {
               fechaNacimiento: returnPatient.fechaNacimiento,
               fechaFallecimiento: returnPatient.fechaFallecimiento,
               estadoCivil: returnPatient.estadoCivil,
-              foto: returnPatient.foto,
-              relaciones: returnPatient.relaciones,
-              financiador: returnPatient.financiador,
-              claveSN: returnPatient.claveSN,
-              entidadesValidadoras: returnPatient.entidadesValidadoras,
+              //foto: returnPatient.foto,
+              //relaciones: returnPatient.relaciones,
+              //financiador: returnPatient.financiador,
+              claveBlocking: returnPatient.claveBlocking,
+              //entidadesValidadoras: returnPatient.entidadesValidadoras,
 			  targetid:returnPatient.idPaciente
           });
 
