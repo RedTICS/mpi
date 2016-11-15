@@ -1,0 +1,38 @@
+{
+  "name": "mpi",
+  "version": "1.0.0",
+  "description": "Algoritmos de matcheo para MPI",
+  "main": "index.js",
+  "scripts": {
+    "startNode": "tsc && gulp && concurrently \"npm run node\" ",
+    "start": "concurrently \"npm run tsc:w\" \"npm run node\" ",
+    "node": "node ./index.js",
+    "postinstall": "typings install",
+    "tsc": "tsc",
+    "tsc:w": "tsc -w",
+    "typings": "typings"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andes/mpi.git"
+  },
+  "keywords": [
+    "MPI"
+  ],
+  "author": "UNCOMA - ANDES TEAM",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/andes/mpi/issues"
+  },
+  "homepage": "https://github.com/andes/mpi#readme",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "http": "0.0.0",
+    "mongoose": "^4.6.7",
+    "path": "^0.12.7",
+    "require-dir": "^0.3.1",
+    "typescript": "^2.0.9",
+    "typings": "^2.0.0"
+  }
+}
