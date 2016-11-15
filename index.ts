@@ -4,6 +4,7 @@ import { paciente } from './schemas/patient';
 
 /*Esta parte es para probar lo de mutantes*/
 
+
 mongoose.connect('mongodb://10.1.62.17/migrasips');
 
 let patients;
