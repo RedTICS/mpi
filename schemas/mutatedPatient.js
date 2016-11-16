@@ -1,5 +1,6 @@
-var mongoose = require('mongoose');
-var ubicacionSchema = require('./ubicacion');
+"use strict";
+const mongoose = require('mongoose');
+const ubicacionSchema = require('./ubicacion');
 var mutatedPatientSchema = new mongoose.Schema({
     documento: String,
     activo: Boolean,
@@ -70,10 +71,11 @@ var mutatedPatientSchema = new mongoose.Schema({
             activo: Boolean,
             fechaAlta: Date,
             fechaBaja: Date,
-            ranking: Number
+            ranking: Number,
         }],
     claveBlocking: [String],
     entidadesValidadoras: [String],
     targetid: String
 });
 exports.MutatedPatient = mongoose.model('MutatedPatient', mutatedPatientSchema, 'mutatedPatient');
+//# sourceMappingURL=mutatedPatient.js.map

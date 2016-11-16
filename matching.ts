@@ -16,8 +16,9 @@ export class matching {
                         reject(err);
                     } else {
                         resolve(item);
+                        db.close();
                     }
-                    db.close();
+
                 });
 
 
@@ -41,7 +42,6 @@ export class matching {
         var pacienteB;
         var valor: number;
         listaPares.forEach(par => {
-            console.log(par);
             if (par[0]) {
                 pacienteA = {
                     identity: par[0].documento,

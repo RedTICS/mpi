@@ -170,7 +170,6 @@ export class servicioBlocking {
             listaPacientes.forEach(registro => {
                 //Realiza un If para evaluar el grado de coincidencia de la clave de Blocking
                 listaPares.push([paciente, registro]);
-                console.log('PARES', listaPares);
             })
             if (listaPares)
                 resolve(listaPares);

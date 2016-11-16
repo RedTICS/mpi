@@ -1,9 +1,12 @@
-var mongoose = require('mongoose');
-var mutator_1 = require('./utils/mutator');
-var patient_1 = require('./schemas/patient');
-mongoose.connect('mongodb://10.1.62.17/migrasips');
-var patients;
-var cantidadMutantes = 10;
+"use strict";
+const mongoose = require('mongoose');
+const mutator_1 = require('./utils/mutator');
+const patient_1 = require('./schemas/patient');
+const config = require('./config');
+/*Esta parte es para probar lo de mutantes*/
+mongoose.connect(config.urlMigraSips);
+let patients;
+let cantidadMutantes = 10;
 patient_1.paciente.find({}, function (err, res) {
     patients = res;
     patients.forEach(function (element, index) {
@@ -13,10 +16,11 @@ patient_1.paciente.find({}, function (err, res) {
     console.log("La mutación se ha realizado correctamente...");
 }).limit(50);
 function mutar(item, index, cantMutantes) {
-    var mutator = new mutator_1.Mutator();
+    let mutator = new mutator_1.Mutator();
     var i = 0;
     for (i = 0; i < cantMutantes; i++) {
         var p = mutator.mutatePatient(item);
         p.save();
     }
 }
+//# sourceMappingURL=index.js.map
