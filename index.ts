@@ -1,11 +1,12 @@
 import * as mongoose from 'mongoose'
 import { Mutator } from './utils/mutator';
 import { paciente } from './schemas/patient';
+import * as config from './config';
 
 /*Esta parte es para probar lo de mutantes*/
 
 
-mongoose.connect('mongodb://10.1.62.17/migrasips');
+mongoose.connect(config.urlMigraSips);
 
 let patients;
 let cantidadMutantes = 10;
@@ -27,10 +28,7 @@ function mutar(item, index,cantMutantes)
     let mutator = new Mutator();
 	var i=0;
 	for(i=0;i<cantMutantes;i++){
-		var p = mutator.mutatePatient(item);	
+		var p = mutator.mutatePatient(item);
         p.save();
 	}
 }
-
-
-

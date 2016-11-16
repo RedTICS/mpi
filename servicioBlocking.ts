@@ -1,4 +1,3 @@
-import { servicioMongo } from './servicioMongo';
 import * as config from './config';
 import * as mongodb from 'mongodb';
 import { libString } from './libString';
@@ -11,13 +10,13 @@ se arman los pares de pacientes para aplicar el match
 */
 export class servicioBlocking {
 
-    obtenerPacientes(condicion) {
+    obtenerPacientes(condicion, coleccion) {
         var url = config.urlMigraSips;
         console.log('URL', url, condicion);
         //var url = 'mongodb://localhost:27017/andes';
         return new Promise((resolve, reject) => {
             mongodb.MongoClient.connect(url, function(err, db) {
-                db.collection("paciente").find(
+                db.collection(coleccion).find(
                     condicion
                 ).toArray(function(err, items) {
                     if (err) {
@@ -85,7 +84,7 @@ export class servicioBlocking {
 
     asignarClaveBlocking() {
         /*Se recorren los pacientes en el migrasips para asignarles las claves de blocking*/
-        this.obtenerPacientes({})
+        this.obtenerPacientes({},"paciente")
             .then((res => {
                 let lista;
                 lista = res;
@@ -120,15 +119,15 @@ export class servicioBlocking {
 
 
 
-    registrosBlocking(condicion) {
-        var servMongo = new servicioMongo();
+    registrosBlocking(condicion, coleccion) {
+        //var servMongo = new servicioMongo();
         //Se obtienen los pacientes por una condición de Blocking
         var listaRegistros = [];
         return new Promise((resolve, reject) => {
-            servMongo.obtenerPacientes(condicion)
+            this.obtenerPacientes(condicion,coleccion)
                 .then((resultado => {
                     //Se generar los Registros Pares
-                    console.log('registrosBlocking', condicion, resultado);
+                    //console.log('registrosBlocking', condicion, resultado);
                     if (resultado) {
                         var lista;
                         lista = resultado;
