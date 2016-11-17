@@ -29,6 +29,7 @@
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "http": "0.0.0",
+    "jaro-winkler": "^0.2.8",
     "mongodb": "^2.2.11",
     "mongoose": "^4.6.7",
     "path": "^0.12.7",
