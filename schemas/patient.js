@@ -1,6 +1,5 @@
-"use strict";
-const mongoose = require('mongoose');
-const ubicacionSchema = require('./ubicacion');
+var mongoose = require('mongoose');
+var ubicacionSchema = require('./ubicacion');
 /* Genero este Schema para hacer las pruebas debería ser idéntico al de la API y una vez finalizadas
    Las pruebas reemplazado por el de la API */
 var pacienteSchema = new mongoose.Schema({
@@ -73,10 +72,9 @@ var pacienteSchema = new mongoose.Schema({
             activo: Boolean,
             fechaAlta: Date,
             fechaBaja: Date,
-            ranking: Number,
+            ranking: Number
         }],
     claveBlocking: [String],
     entidadesValidadoras: [String]
 });
 exports.paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-//# sourceMappingURL=patient.js.map

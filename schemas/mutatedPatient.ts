@@ -78,4 +78,4 @@ var mutatedPatientSchema = new mongoose.Schema({
     targetid:String
 });
 
-export let MutatedPatient = mongoose.model('MutatedPatient',mutatedPatientSchema, 'mutatedPatient');
+export let MutatedPatient = mongoose.model('MutatedPatient',mutatedPatientSchema, 'mutatedPatientVecinos');

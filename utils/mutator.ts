@@ -3,7 +3,7 @@ import { MutatedPatient } from '../schemas/mutatedPatient';
 export class Mutator {
 
     private getRamdomCapitalLetter() {
-        let text: String;
+        let text;
         let possible: String;
         let letterNumber: Number;
 
@@ -33,7 +33,6 @@ export class Mutator {
         return text;
     }
 
-
     private getRamdomNumber() {
         let text: String;
         let possible: String;
@@ -53,6 +52,32 @@ export class Mutator {
         return Math.floor(Math.random() * (max - min)) + min;
     }
 
+     private getInfoVecina(originalStr:string):any {
+        let dataChange;
+        let text;
+
+        text = "";
+        dataChange={
+            caracter : "",
+            posicionVecina: "",
+            posicionTarget: ""
+        };
+
+        let cantCaracteres = originalStr.length;
+        //Seleccino una posición al azar del string (menos la primera y la última)
+        let posicionObjetivo = this.getRamdomInt(1,cantCaracteres - 1);
+        //Seleccino una letra al azar entre esa posición y sus vecinos
+        let posicionVecina = this.getRamdomInt(posicionObjetivo -1, posicionObjetivo + 1);
+        text += originalStr.charAt(posicionVecina); 
+
+        //Armo el objeto
+        dataChange.caracter = text;
+        dataChange.posicionVecina = posicionVecina;
+        dataChange.posicionTarget = posicionObjetivo;
+
+        return dataChange;
+    }
+
 
     private mutateString(numberOfChar:Number, originalStr:string):string {
 
@@ -62,8 +87,15 @@ export class Mutator {
 
         for (var i = 0; i < numberOfChar; i++) {
             var j = this.getRamdomInt(0, lengthStr);
-            let replaceLetter = this.getRamdomLetter();
-            mutatedStr = mutatedStr.replace(mutatedStr.charAt(j), replaceLetter);
+            //let replaceLetter = this.getLetraVecina(originalStr);
+            //let replaceLetter = this.getRamdomCapitalLetter();
+            let replaceData:any = this.getInfoVecina(originalStr);
+            let originalCaracter = originalStr.charAt(replaceData.posicionTarget);
+            //Doy vuelta los caracteres
+            mutatedStr = mutatedStr.replace(mutatedStr.charAt(replaceData.posicionTarget),replaceData.caracter);
+            mutatedStr = mutatedStr.replace(mutatedStr.charAt(replaceData.posicionVecina),originalCaracter);
+
+            //mutatedStr = mutatedStr.replace(mutatedStr.charAt(j), replaceLetter);
         }
         return mutatedStr;
     }

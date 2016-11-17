@@ -9,13 +9,13 @@ import * as config from './config';
 mongoose.connect(config.urlMigraSips);
 
 let patients;
+//Cant. de mutantes a generar
 let cantidadMutantes = 10;
 
 paciente.find({}, function (err, res) {
         patients = res;
         patients.forEach(
         	function(element, index){
-                //El valor de 30 mutantes a generar podría cambiarse. Por el momento mantengo el valor propuesto.
                 mutar(element, index, cantidadMutantes);
         	}
         );
@@ -29,6 +29,7 @@ function mutar(item, index,cantMutantes)
 	var i=0;
 	for(i=0;i<cantMutantes;i++){
 		var p = mutator.mutatePatient(item);
+        //console.log(p);
         p.save();
 	}
 }
