@@ -2,16 +2,17 @@
 import * as config from './config';
 import * as mongodb from 'mongodb';
 import {machingDeterministico} from './machingDeterministico';
+import {matchingJaroWinkler} from './matchingJaroWinkler';
 
 
 
 export class matching {
 
-    guardarMatch(match) {
+    guardarMatch(match, collection) {
         var url = config.urlMigraSips;
         return new Promise((resolve, reject) => {
             mongodb.MongoClient.connect(url, function(err, db) {
-                db.collection("matchingMutantes").insertOne(match, function(err, item) {
+                db.collection(collection).insertOne(match, function(err, item) {
                     if (err) {
                         reject(err);
                     } else {
@@ -28,16 +29,11 @@ export class matching {
     }
 
 
-    matchPares(listaPares, listaMatch) {
+    matchPares(listaPares, listaMatch, weights, algoritmo, collection) {
         /*Se aplica el algoritmo de matcheo por cada par
         Se guarda en la collección matching el par de Paciente y el valor devuelto
         por el algoritmo de match*/
-        var weights = {
-            identity: 0.2,
-            name: 0.3,
-            gender: 0.4,
-            birthDate: 0.1
-        };
+
         var pacienteA;
         var pacienteB;
         var valor: number;
@@ -61,10 +57,21 @@ export class matching {
                 };
 
             }
-            var m = new machingDeterministico();
-            valor = m.maching(pacienteA, pacienteB, weights);
+            var m;
+            if (algoritmo == 'Jaro Winkler') {
+                m = new matchingJaroWinkler();
+                valor = m.machingJaroWinkler(pacienteA, pacienteB, weights);
+
+            }
+            else {
+                m = new machingDeterministico();  //'Levenshtein'
+                valor = m.maching(pacienteA, pacienteB, weights);
+
+            }
+
             //Se guardan los pares de pacientes en la collection matching
-            this.guardarMatch({ paciente1: par[0], paciente2: par[1], match: valor })
+
+            this.guardarMatch({ paciente1: par[0], paciente2: par[1], match: valor },collection)
                 .then((res => {
                     console.log('Se guarda matcheo', valor);
                 }))
