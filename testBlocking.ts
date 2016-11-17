@@ -22,7 +22,13 @@ for (let i = 50; i < 51; i++) {
             listaPares = res;
             console.log('Lista de Pares para realizar el matching', listaPares.length);
             //Se realiza el matcheo por cada grupo de pares
-            match.matchPares(listaPares, listaMatch);
+            var weights = {
+                identity: 0.2,
+                name: 0.3,
+                gender: 0.4,
+                birthDate: 0.1
+            };
+            match.matchPares(listaPares, listaMatch, weights,'Levenshtein');
         })
         .catch((err => {
             console.log('Error al generar lista de Pares', err);
