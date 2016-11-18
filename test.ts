@@ -1,7 +1,8 @@
 import { IPerson } from './IPerson';
 import { IWeight } from './IWeight';
 import {machingDeterministico} from './machingDeterministico';
-
+import {soundexES} from './soundexES';
+import * as distance from 'jaro-winkler';
 
 var weights = {
 	identity: 0.2,
@@ -32,7 +33,32 @@ var pacienteB = {
 	gender: "male"
 };
 
-var m = new machingDeterministico();
+// var m = new machingDeterministico();
+// console.log(m.maching(pacienteA, pacienteB, weights));
+
+var so = new soundexES();
+
+var tests = [
+  "Giraldo",
+  "Jiraldo",
+  "cien",
+  "sein",
+  "complicado",
+  "xocola",
+  "chocolate",
+  "Fernandez",
+  "Hernandez",
+  "Silvina Roga",
+  "Silvia Roa",
+  "Silvana Rosa"
+];
 
 
-console.log(m.maching(pacienteA, pacienteB, weights));
+for(var i=0;i<tests.length;i++){
+	var dato = so.soundex(tests[i]);
+	var dato1 = "";
+	if(i>0)
+		dato1 = so.soundex(tests[i-1]);
+
+	console.log(tests[i],': ',dato," -- ",distance(dato,dato1));
+}
