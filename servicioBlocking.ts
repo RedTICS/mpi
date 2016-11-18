@@ -1,6 +1,8 @@
 import * as config from './config';
 import * as mongodb from 'mongodb';
 import { libString } from './libString';
+import { metaphoneES } from './metaphoneES';
+import { soundexES} from './soundexES';
 
 
 /*Se obtienen las claves de blocking
@@ -56,6 +58,26 @@ export class servicioBlocking {
         });
     }
 
+    updatePaciente(paciente, clave) {
+        var url = config.urlMigraSips;
+        return new Promise((resolve, reject) => {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                db.collection("paciente").updateOne({ _id: paciente._id }, { $set: { clavesBlocking: clave } }, function(err, item) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(item);
+                        db.close();
+                    }
+
+                });
+
+
+            });
+
+        });
+    }
+
     /*Se crean las claves de blocking claveBlocking: [String],*/
     crearClavesBlocking(paciente) {
         var claves = [];
@@ -76,7 +98,13 @@ export class servicioBlocking {
 
         claves.push(clave);
 
+        //Se utiliza el algoritmo metaphone para generar otra clave de Blocking
+        var algMetaphone = new metaphoneES();
+        claves.push(algMetaphone.metaphone(paciente["apellido"] + paciente["nombre"]));
 
+        //Se utiliza el algoritmo soundex para generar una nueva clave de Blocking
+        var algSoundex = new soundexES();
+        claves.push(algSoundex.soundex(paciente["apellido"] + paciente["nombre"]));
 
         return claves;
 
@@ -84,24 +112,28 @@ export class servicioBlocking {
 
     asignarClaveBlocking() {
         /*Se recorren los pacientes en el migrasips para asignarles las claves de blocking*/
-        this.obtenerPacientes({},"paciente")
+        var url = config.urlMigraSips;
+        this.obtenerPacientes({}, "paciente")
             .then((res => {
                 let lista;
                 lista = res;
                 if (lista) {
+                    
                     lista.forEach(paciente => {
+                        //for (var i = 0; i < 10000; i++) {
                         //Se asignan las claves de blocking
+                        //var paciente = lista[i];
                         var claves = this.crearClavesBlocking(paciente);
-                        paciente.claveBlocking = claves;
+                        console.log("Claves", claves);
+                        //paciente["claveBlocking"] = claves;
                         //Se guarda el paciente
-                        this.guardarPaciente(paciente)
+                        this.updatePaciente(paciente, claves)
                             .then((res => {
                                 console.log('Se guarda el paciente con las claves de blocking');
                             }))
                             .catch((err => {
                                 console.log('Error al guardar matcheo', err);
                             }));
-
 
 
                     })
@@ -124,7 +156,7 @@ export class servicioBlocking {
         //Se obtienen los pacientes por una condición de Blocking
         var listaRegistros = [];
         return new Promise((resolve, reject) => {
-            this.obtenerPacientes(condicion,coleccion)
+            this.obtenerPacientes(condicion, coleccion)
                 .then((resultado => {
                     //Se generar los Registros Pares
                     //console.log('registrosBlocking', condicion, resultado);
