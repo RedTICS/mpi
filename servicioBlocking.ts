@@ -111,22 +111,22 @@ export class servicioBlocking {
         console.log(paciente.fechaNacimiento);
         var claves = [];
         var fecha;
-        var anioNacimiento = "1900";
-        var doc = "";
-        if (paciente["fechaNacimiento"]) {
-            fecha = paciente["fechaNacimiento"].split("-");
-            //fecha= paciente["fechaNacimiento"].toISOString().split("-");
-            anioNacimiento = fecha[0].toString();
-        }
-
-        if (paciente["documento"]) {
-            doc = paciente["documento"].substr(0, 4);
-        }
-
-        var clave = libString.obtenerConsonante(paciente.apellido, 3) + libString.obtenerConsonante(paciente.nombre, 2) +
-            anioNacimiento + doc;
-
-        claves.push(clave);
+        // var anioNacimiento = "1900";
+        // var doc = "";
+        // if (paciente["fechaNacimiento"]) {
+        //     fecha = paciente["fechaNacimiento"].split("-");
+        //     //fecha= paciente["fechaNacimiento"].toISOString().split("-");
+        //     anioNacimiento = fecha[0].toString();
+        // }
+        //
+        // if (paciente["documento"]) {
+        //     doc = paciente["documento"].substr(0, 4);
+        // }
+        //
+        // var clave = libString.obtenerConsonante(paciente.apellido, 3) + libString.obtenerConsonante(paciente.nombre, 2) +
+        //     anioNacimiento + doc;
+        //
+        // claves.push(clave);
 
         // Se utiliza el algoritmo metaphone para generar otra clave de Blocking
         // claves.push(paciente.clavesBlocking[0]);
@@ -135,12 +135,13 @@ export class servicioBlocking {
         var algMetaphone = new metaphoneES();
         var claveApellido = algMetaphone.metaphone(paciente["apellido"]);
         var claveNombre = algMetaphone.metaphone(paciente["nombre"]);
-        claves.push(claveApellido + claveNombre.slice(0, 3));
-
+        claves.push(claveApellido.slice(0,4) + claveNombre.slice(0, 3));
+        claves.push(claveApellido);
+        claves.push(claveNombre);
         //Se utiliza el algoritmo soundex para generar una nueva clave de Blocking
         var algSoundex = new soundexES();
         claves.push(algSoundex.soundex(paciente["apellido"] + paciente["nombre"]));
-
+        claves.push(algSoundex.soundex(paciente["apellido"]));
         return claves;
 
     }
@@ -186,7 +187,7 @@ export class servicioBlocking {
                                             reject(err);
                                         } else {
                                             cant = cant + 1;
-                                            if (cant == 92808) {
+                                            if (cant == 500) {
                                                 db.close();
                                                 resolve(listaPacientes);
 

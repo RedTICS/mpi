@@ -50,6 +50,17 @@ export class matching {
     }
 
 
+    convertirFecha(fecha){
+      //console.log(fecha,typeof(fecha));
+      if (typeof(fecha) != "string"){
+        var fecha1 =  new Date(fecha);
+        return((fecha1.toISOString()).substring(0,10));
+      }
+      else
+         return ((fecha.toString()).substring(0,10));
+    }
+
+
     matchPares(listaPares, listaMatch, weights, algoritmo, collection) {
         /*Se aplica el algoritmo de matcheo por cada par
         Se guarda en la collección listaMatch el par de Paciente y el valor devuelto
@@ -58,6 +69,7 @@ export class matching {
         var pacienteA;
         var pacienteB;
         var valor: number;
+        console.log('Pares',listaPares);
         listaPares.forEach(par => {
 
             if (par[0]) {
@@ -65,7 +77,7 @@ export class matching {
                     identity: par[0].documento,
                     firstname: par[0].nombre,
                     lastname: par[0].apellido,
-                    birthDate: par[0].fechaNacimiento.toString(),
+                    birthDate: this.convertirFecha(par[0].fechaNacimiento),
                     gender: par[0].sexo
                 };
             }
@@ -74,7 +86,7 @@ export class matching {
                     identity: par[1].documento,
                     firstname: par[1].nombre,
                     lastname: par[1].apellido,
-                    birthDate: par[1].fechaNacimiento.toString(),
+                    birthDate: this.convertirFecha(par[1].fechaNacimiento),
                     gender: par[1].sexo
                 };
 

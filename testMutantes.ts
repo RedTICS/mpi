@@ -25,7 +25,7 @@ servicio.obtenerPacientes({}, "mutatedPatient")
 
         var index = Math.floor(Math.random() * (500 - 1)) + 1;
         var mutante = listaMutantes[index];
-        console.log('Mutantes Elegido', mutante)
+        console.log('Mutante Elegido', mutante)
         servicio.obtenerPacientes({}, "paciente", 10000)
             //Se obtienen la lista de Pares de por target Id
             .then((res) => {
@@ -55,7 +55,6 @@ servicio.obtenerPacientes({}, "mutatedPatient")
                 .catch((err=>{
                      console.log('Error al guardar la lista de Match', err);
                 }))
-
 
             })
             .catch((err => {
