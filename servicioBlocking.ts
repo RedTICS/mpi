@@ -12,28 +12,56 @@ se arman los pares de pacientes para aplicar el match
 */
 export class servicioBlocking {
 
-    obtenerPacientes(condicion, coleccion) {
+    obtenerPacientes(condicion, coleccion, limite?: number) {
         var url = config.urlMigraSips;
         console.log('URL', url, condicion);
         //var url = 'mongodb://localhost:27017/andes';
         return new Promise((resolve, reject) => {
-            mongodb.MongoClient.connect(url, function(err, db) {
-                db.collection(coleccion).find(
-                    condicion
-                ).toArray(function(err, items) {
-                    if (err) {
-                        console.log('Error obtenerPacientes', err);
-                        reject(err);
-                    }
 
-                    else {
-                        resolve(items);
-                        db.close();
-                    }
-                })
+            if (limite) {
+              mongodb.MongoClient.connect(url, function(err, db) {
+                  db.collection(coleccion).find(
+                      condicion
+                  ).limit(limite).toArray(function(err, items) {
+                      if (err) {
+                          console.log('Error obtenerPacientes', err);
+                          reject(err);
+                      }
+
+                      else {
+                          resolve(items);
+                          db.close();
+                      }
+                  })
 
 
-            });
+              });
+
+
+
+            }
+            else {
+                mongodb.MongoClient.connect(url, function(err, db) {
+                    db.collection(coleccion).find(
+                        condicion
+                    ).toArray(function(err, items) {
+                        if (err) {
+                            console.log('Error obtenerPacientes', err);
+                            reject(err);
+                        }
+
+                        else {
+                            resolve(items);
+                            db.close();
+                        }
+                    })
+
+
+                });
+
+
+            }
+
         });
 
     }
@@ -80,12 +108,14 @@ export class servicioBlocking {
 
     /*Se crean las claves de blocking claveBlocking: [String],*/
     crearClavesBlocking(paciente) {
+        console.log(paciente.fechaNacimiento);
         var claves = [];
         var fecha;
         var anioNacimiento = "1900";
         var doc = "";
         if (paciente["fechaNacimiento"]) {
             fecha = paciente["fechaNacimiento"].split("-");
+            //fecha= paciente["fechaNacimiento"].toISOString().split("-");
             anioNacimiento = fecha[0].toString();
         }
 
@@ -98,9 +128,14 @@ export class servicioBlocking {
 
         claves.push(clave);
 
-        //Se utiliza el algoritmo metaphone para generar otra clave de Blocking
+        // Se utiliza el algoritmo metaphone para generar otra clave de Blocking
+        // claves.push(paciente.clavesBlocking[0]);
+        // claves.push(paciente.clavesBlocking[1]);
+        // claves.push(paciente.clavesBlocking[2]);
         var algMetaphone = new metaphoneES();
-        claves.push(algMetaphone.metaphone(paciente["apellido"] + paciente["nombre"]));
+        var claveApellido = algMetaphone.metaphone(paciente["apellido"]);
+        var claveNombre = algMetaphone.metaphone(paciente["nombre"]);
+        claves.push(claveApellido + claveNombre.slice(0, 3));
 
         //Se utiliza el algoritmo soundex para generar una nueva clave de Blocking
         var algSoundex = new soundexES();
@@ -112,40 +147,75 @@ export class servicioBlocking {
 
     asignarClaveBlocking() {
         /*Se recorren los pacientes en el migrasips para asignarles las claves de blocking*/
+        var listaPacientes = [];
         var url = config.urlMigraSips;
-        this.obtenerPacientes({}, "paciente")
-            .then((res => {
-                let lista;
-                lista = res;
-                if (lista) {
-                    
-                    lista.forEach(paciente => {
-                        //for (var i = 0; i < 10000; i++) {
-                        //Se asignan las claves de blocking
-                        //var paciente = lista[i];
-                        var claves = this.crearClavesBlocking(paciente);
-                        console.log("Claves", claves);
-                        //paciente["claveBlocking"] = claves;
-                        //Se guarda el paciente
-                        this.updatePaciente(paciente, claves)
-                            .then((res => {
-                                console.log('Se guarda el paciente con las claves de blocking');
-                            }))
-                            .catch((err => {
-                                console.log('Error al guardar matcheo', err);
-                            }));
+        var cant = 0;
+        return new Promise((resolve, reject) => {
+            this.obtenerPacientes({}, "paciente")   //paciente por mutatedPatient
+                .then((res => {
+                    let lista;
+                    lista = res;
+                    if (lista) {
+                        lista.forEach(paciente => {
+                            //for (var i = 0; i < 10000; i++)
+                            //Se asignan las claves de blocking
+                            //var paciente = lista[i];
+                            var claves = this.crearClavesBlocking(paciente);
+                            console.log("Claves", claves);
+                            //paciente["claveBlocking"] = claves;
+                            //Se guarda el paciente
+                            // this.updatePaciente(paciente, claves)
+                            //     .then((res => {
+                            //         console.log('Se guarda el paciente con las claves de blocking');
+                            //     }))
+                            //     .catch((err => {
+                            //         console.log('Error al guardar matcheo', err);
+                            //     }));
+                            listaPacientes.push([{ _id: paciente._id }, claves]);
+
+                        })
+                    }
+                    if (lista.length == listaPacientes.length) {
+                        console.log('Total Pacientes a Actualizar', listaPacientes.length);
+                        mongodb.MongoClient.connect(url, function(err, db) {
+                            if (listaPacientes) {
+                                listaPacientes.forEach(p => {
+                                    console.log(p[0], p[1]);  //paciente por mutatedPatient
+                                    db.collection("paciente").updateOne(p[0], { $set: { claveBlocking: p[1] } }, function(err, item) {
+                                        if (err) {
+                                            reject(err);
+                                        } else {
+                                            cant = cant + 1;
+                                            if (cant == 92808) {
+                                                db.close();
+                                                resolve(listaPacientes);
+
+                                            }
+
+                                        }
+
+                                    });
 
 
-                    })
-                }
+                                })
+                            }
 
 
-            }))
-            .catch((err => {
-                console.log('Error al generar lista de Pacientes', err);
-            }))
+
+                        });
 
 
+
+                    }
+
+
+                }))
+                .catch((err => {
+                    console.log('Error al generar lista de Pacientes', err);
+                    reject(err);
+                }))
+
+        })
 
     }
 

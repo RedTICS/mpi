@@ -28,16 +28,38 @@ export class matching {
         });
     }
 
+    guardarListaMatch(listaMatch, coleccion: string) {
+        var url = config.urlMigraSips;
+        return new Promise((resolve, reject) => {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                console.log('Total Match', listaMatch.length);
+                listaMatch.forEach(match => {
+                    db.collection(coleccion).insertOne(match, function(err, item) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(item);
+                        }
+
+                    });
+                });
+                db.close();
+            });
+
+        });
+    }
+
 
     matchPares(listaPares, listaMatch, weights, algoritmo, collection) {
         /*Se aplica el algoritmo de matcheo por cada par
-        Se guarda en la collección matching el par de Paciente y el valor devuelto
-        por el algoritmo de match*/
+        Se guarda en la collección listaMatch el par de Paciente y el valor devuelto
+        por el algoritmo de match y se persiste la información en collection*/
 
         var pacienteA;
         var pacienteB;
         var valor: number;
         listaPares.forEach(par => {
+
             if (par[0]) {
                 pacienteA = {
                     identity: par[0].documento,
@@ -71,13 +93,13 @@ export class matching {
 
             //Se guardan los pares de pacientes en la collection matching
 
-            this.guardarMatch({ paciente1: par[0], paciente2: par[1], match: valor },collection)
-                .then((res => {
-                    console.log('Se guarda matcheo', valor);
-                }))
-                .catch((err => {
-                    console.log('Error al guardar matcheo', err);
-                }));
+            // this.guardarMatch({ paciente1: par[0], paciente2: par[1], match: valor },collection)
+            //     .then((res => {
+            //         console.log('Se guarda matcheo', valor);
+            //     }))
+            //     .catch((err => {
+            //         console.log('Error al guardar matcheo', err);
+            //     }));
             listaMatch.push({ paciente1: par[0], paciente2: par[1], match: valor });
 
         })

@@ -33,4 +33,16 @@ var match = new matching();
 //         }))
 //
 // }
-servicio.asignarClaveBlocking();
+servicio.asignarClaveBlocking()
+    .then((res => {
+        let lista;
+        lista = res;
+        if (lista) {
+            console.log('FIN')
+        }
+
+    }))
+    .catch((err => {
+        console.log('Error al generar lista de Pacientes', err);
+
+    }))
