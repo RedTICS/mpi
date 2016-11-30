@@ -39,6 +39,8 @@ var pacienteB = {
 var so = new soundexES();
 
 var tests = [
+  "shonatan peres",
+  "yonathan perez",
   "Giraldo",
   "Jiraldo",
   "cien",
@@ -46,8 +48,8 @@ var tests = [
   "complicado",
   "xocola",
   "chocolate",
-  "Fernandez",
-  "Hernandez",
+  "Fernández hugo",	
+  "Hernandez Hugo",
   "Silvina Roga",
   "Silvia Roa",
   "Silvana Rosa"
@@ -60,5 +62,6 @@ for(var i=0;i<tests.length;i++){
 	if(i>0)
 		dato1 = so.soundex(tests[i-1]);
 
-	console.log(tests[i],': ',dato," -- ",distance(dato,dato1));
+	//console.log(tests[i],': ',dato," -- ",distance(dato,dato1));
+	console.log(tests[i],': ', dato);
 }
