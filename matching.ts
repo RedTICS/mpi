@@ -3,6 +3,7 @@ import * as config from './config';
 import * as mongodb from 'mongodb';
 import {machingDeterministico} from './machingDeterministico';
 import {matchingJaroWinkler} from './matchingJaroWinkler';
+import {matchingMetaphone} from './matchingMetaphone';
 
 
 
@@ -50,14 +51,14 @@ export class matching {
     }
 
 
-    convertirFecha(fecha){
-      //console.log(fecha,typeof(fecha));
-      if (typeof(fecha) != "string"){
-        var fecha1 =  new Date(fecha);
-        return((fecha1.toISOString()).substring(0,10));
-      }
-      else
-         return ((fecha.toString()).substring(0,10));
+    convertirFecha(fecha) {
+        //console.log(fecha,typeof(fecha));
+        if (typeof (fecha) != "string") {
+            var fecha1 = new Date(fecha);
+            return ((fecha1.toISOString()).substring(0, 10));
+        }
+        else
+            return ((fecha.toString()).substring(0, 10));
     }
 
 
@@ -69,7 +70,11 @@ export class matching {
         var pacienteA;
         var pacienteB;
         var valor: number;
-        console.log('Pares',listaPares);
+        var valorJW: number;
+        var valorM: number;
+        var valorL: number;
+
+
         listaPares.forEach(par => {
 
             if (par[0]) {
@@ -91,17 +96,43 @@ export class matching {
                 };
 
             }
-            var m;
-            if (algoritmo == 'Jaro Winkler') {
-                m = new matchingJaroWinkler();
-                valor = m.machingJaroWinkler(pacienteA, pacienteB, weights);
+            var m1;
+            var m2;
+            var m3;
+            m1 = new matchingJaroWinkler();
+            m2 = new matchingMetaphone();
+            m3 = new machingDeterministico();  //'Levenshtein'
 
+            if (algoritmo == '') {
+                valorJW = m1.machingJaroWinkler(pacienteA, pacienteB, weights);
+                valorM = m2.machingMetaphone(pacienteA, pacienteB, weights);
+                valorL = m3.maching(pacienteA, pacienteB, weights);
+                listaMatch.push({ paciente1: par[0], paciente2: par[1], matchL: valorL, matchJW: valorJW, matchM: valorM });
             }
             else {
-                m = new machingDeterministico();  //'Levenshtein'
-                valor = m.maching(pacienteA, pacienteB, weights);
+                if (algoritmo == 'Jaro Winkler') {
 
+                    valor = m1.machingJaroWinkler(pacienteA, pacienteB, weights);
+
+                }
+
+                else {
+                    if (algoritmo == 'Metaphone') {
+
+                        valor = m2.machingMetaphone(pacienteA, pacienteB, weights);
+
+                    }
+                    else {
+
+                        valor = m3.maching(pacienteA, pacienteB, weights); //Levensthein
+
+                    }
+
+                }
+
+                listaMatch.push({ paciente1: par[0], paciente2: par[1], match: valor });
             }
+
 
             //Se guardan los pares de pacientes en la collection matching
 
@@ -112,7 +143,7 @@ export class matching {
             //     .catch((err => {
             //         console.log('Error al guardar matcheo', err);
             //     }));
-            listaMatch.push({ paciente1: par[0], paciente2: par[1], match: valor });
+
 
         })
 

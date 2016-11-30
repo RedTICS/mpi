@@ -45,16 +45,18 @@ servicio.obtenerPacientes({}, "mutatedPatient")
                 };
                 //  match.matchPares([mutante,paciente], listaMatch, weights, 'Jaro Winkler',"matchingMutantesL1E2");
                 console.log("Total Pares", listaPares.length);
-                match.matchPares(listaPares, listaMatch, weights, 'Levensthein', "matchMutantesL1E2");
+                //match.matchPares(listaPares, listaMatch, weights, 'Levensthein', "matchMutantesE2");
+                //match.matchPares(listaPares, listaMatch, weights, 'Jaro Winkler', "matchMutantesE2");
+                match.matchPares(listaPares, listaMatch, weights, '', "matchMutantesE2");
                 console.log("Total Match", listaMatch.length);
 
-                match.guardarListaMatch(listaMatch, "matchMutantesL1E2")
-                .then((res) => {
-                      console.log('Se guardó la lista de match');
-                })
-                .catch((err=>{
-                     console.log('Error al guardar la lista de Match', err);
-                }))
+                match.guardarListaMatch(listaMatch, "matchMutantesE2")  //"matchMutantesL1E2"
+                    .then((res) => {
+                        console.log('Se guardó la lista de match');
+                    })
+                    .catch((err => {
+                        console.log('Error al guardar la lista de Match', err);
+                    }))
 
             })
             .catch((err => {
@@ -115,4 +117,3 @@ servicio.obtenerPacientes({"targetid" : "4"}, "mutatedPatient")
                 console.log('Error al generar lista de Pares Original Mutante', err);
             }))
     })*/
-
