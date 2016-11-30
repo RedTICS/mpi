@@ -73,10 +73,10 @@ export class machingDeterministico {
         var a = 0;
 
         if (l1 == 0)
-            return l2;
+            return 0;
 
         if (l2 == 0)
-            return l1;
+            return 0;
 
         a = l1 + 1;
 
