@@ -26,7 +26,7 @@ var pacienteA = {
 };
 
 var pacienteB = {
-	identity: "302569851",
+	identity: "35",
 	firstname: "Gonzalo",
 	lastname: "Carranza",
     birthDate: '01-01-1980',
@@ -56,12 +56,19 @@ var tests = [
 ];
 
 
-for(var i=0;i<tests.length;i++){
-	var dato = so.soundex(tests[i]);
-	var dato1 = "";
-	if(i>0)
-		dato1 = so.soundex(tests[i-1]);
 
-	//console.log(tests[i],': ',dato," -- ",distance(dato,dato1));
-	console.log(tests[i],': ', dato);
-}
+
+var m = new machingDeterministico();
+m.maching(pacienteA, pacienteB, weights);
+
+
+
+// for(var i=0;i<tests.length;i++){
+// 	var dato = so.soundex(tests[i]);
+// 	var dato1 = "";
+// 	if(i>0)
+// 		dato1 = so.soundex(tests[i-1]);
+
+// 	//console.log(tests[i],': ',dato," -- ",distance(dato,dato1));
+// 	console.log(tests[i],': ', dato);
+// }
