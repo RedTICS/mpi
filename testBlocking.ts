@@ -44,5 +44,4 @@ servicio.asignarClaveBlocking()
     }))
     .catch((err => {
         console.log('Error al generar lista de Pacientes', err);
-
     }))
