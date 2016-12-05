@@ -54,14 +54,14 @@ var servicio = new servicioBlocking();
 //     }))
 
 
-var targetBlocking = "ZZRSMRM";
+var targetBlocking = "SRKRN";
 
 var coleccion = "paciente";
 var coleccionBlocking = "clavesAgrupadasPacientes";
 var ventanaBlocking = 5;
 
 
-    //VER COMO ARREGLAR ESTA PARTE PARA QUE PASE LOS DATOS
+
     servicio.getPacientBlockingWindow(targetBlocking,coleccion,coleccionBlocking,ventanaBlocking)
         .then((pacientes =>{
 

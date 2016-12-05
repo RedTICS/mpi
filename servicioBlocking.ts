@@ -376,15 +376,8 @@ export class servicioBlocking {
                                 }
                             }
 
-                            // console.log ("La clave de blocking a rodear: ", claveBlocking);                            
-                            // console.log ("indice del blocking: " ,indiceBlocking);
-                            // console.log("posicion a izquierda: ", posVecinosIzq);
-                            // console.log("posicion a derecha: ", posVecinosDer);
-
                             var vecinos = items.slice(posVecinosIzq, posVecinosDer);
-
-                            // console.log("tamaño del array vecinos: ", vecinos.length);
-                            // console.log("El array: ", vecinos);
+               
                             resolve(vecinos);
 
                             db.close();
@@ -406,6 +399,7 @@ export class servicioBlocking {
                             var arrayClavesBlocking = Object.keys(clavesBlocking).map(function (key) {
                                 return clavesBlocking[key];
                             });
+                            console.log(clavesBlocking);
                             var arrayPromise = [];
                             arrayClavesBlocking.forEach(elem => {
                                 var claveBlocking = elem._id;
@@ -433,34 +427,4 @@ export class servicioBlocking {
                         }))
                 })
             }
-
-
-
-            //
-
-            // this.getClavesBlockingVecinas(targetBlocking, ventanaBlocking, coleccionBlocking)
-            // .then((clavesBlocking => {
-            //     //Hago la conversión a array con el map 
-            //     var arrayClavesBlocking = Object.keys(clavesBlocking).map(function (key) {
-            //         return clavesBlocking[key];
-            //     });
-
-            //     arrayClavesBlocking.forEach(elem => {
-
-            //         var claveBlocking = elem._id;
-            //         this.getPacientesPorClaveBlocking(claveBlocking, coleccion)
-            //             .then((res => {
-            //                 pac = Object.keys(res).map(function (key) {
-            //                     return res[key]
-            //                 });
-
-
-            //             }))
-            //             .catch((err => {
-            //                 console.log('Error al obtener la lista de pacienes por clave de blocking', err);
-            //             }))
-            //     })
-
-            //     return pac
-            // }))
 }
