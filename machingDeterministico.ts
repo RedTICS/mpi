@@ -114,17 +114,17 @@ export class machingDeterministico {
     public maching(identidadA: IPerson, identidadB: IPerson, weights: IWeight): number {
         var completeNameA = identidadA.firstname + identidadA.lastname;
         var completeNameB = identidadB.firstname + identidadB.lastname;
-        var v1 = weights.name * this.levenshtein(libString.preprocessInput(completeNameA.toLocaleLowerCase), libString.preprocessInput(completeNameB.toLowerCase));
+        var v1 = weights.name * this.levenshtein(libString.preprocessInput(completeNameA.toLocaleLowerCase()), libString.preprocessInput(completeNameB.toLowerCase()));
         var v2 = weights.gender * this.sexMatching(identidadA.gender, identidadB.gender);
         var v3 = weights.birthDate * this.stringMatching(identidadA.birthDate, identidadB.birthDate);
         //var v3 = weights.birthDate * this.levenshtein(identidadA.birthDate, identidadB.birthDate);
         //var v4 = weights.identity * this.identityMatching(identidadA.identity, identidadB.identity);
-        var v4 = this.levenshtein(identidadA.identity, identidadB.identity);
-        //var v4 = weights.identity * this.levenshtein(identidadA.identity, identidadB.identity);
+        //var v4 = this.levenshtein(identidadA.identity, identidadB.identity);
+        var v4 = weights.identity * this.levenshtein(identidadA.identity, identidadB.identity);
         //console.log(v1);
         //console.log(v2);
         //console.log(v3);
-        console.log('levenshtein de documento: '+v4);
+       // console.log('levenshtein de documento: '+v4);
         var value = Math.round((v1 + v2 + v3 + v4) * 100) / 100;
         
         return value;

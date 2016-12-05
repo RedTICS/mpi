@@ -406,29 +406,26 @@ export class servicioBlocking {
                             var arrayClavesBlocking = Object.keys(clavesBlocking).map(function (key) {
                                 return clavesBlocking[key];
                             });
-                        
+                            var arrayPromise = [];
                             arrayClavesBlocking.forEach(elem => {
-
                                 var claveBlocking = elem._id;
+                                //let pac2 = this.getPacientesPorClaveBlocking (claveBlocking,coleccion);
+                                arrayPromise.push(this.getPacientesPorClaveBlocking(claveBlocking, coleccion));                                   
+                            })
 
-                                let pac2 = this.getPacientesPorClaveBlocking (claveBlocking,coleccion);
-
-                                this.getPacientesPorClaveBlocking(claveBlocking, coleccion)
-                                    .then((res => {
+                             Promise.all(arrayPromise).then((res => {
                                         let pac2
                                         pac2 = res;
-                                        // pac2 = Object.keys(res).map(function (key) {
-                                        //     return res[key]
-                                        // });
+                                        pac2 = Object.keys(res).map(function (key) {
+                                            return res[key]
+                                        });
                                         pac = pac.concat(pac2);
-                                        //resolve(pac);
-                                        console.log(pac);
+                                        resolve(pac);
                                     }))
                                     .catch((err => {
                                         console.log('Error al obtener la lista de pacienes por clave de blocking', err);
                                         reject(err);
                                     }))
-                            })
                              
                             //console.log('y por aca');
                            
@@ -466,3 +463,4 @@ export class servicioBlocking {
 
             //     return pac
             // }))
+}

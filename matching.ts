@@ -4,6 +4,7 @@ import * as mongodb from 'mongodb';
 import {machingDeterministico} from './machingDeterministico';
 import {matchingJaroWinkler} from './matchingJaroWinkler';
 import {matchingMetaphone} from './matchingMetaphone';
+import {matchingSoundexES} from './matchingSoundexES';
 
 
 
@@ -73,6 +74,7 @@ export class matching {
         var valorJW: number;
         var valorM: number;
         var valorL: number;
+        var valorS: number;
 
 
         listaPares.forEach(par => {
@@ -99,15 +101,18 @@ export class matching {
             var m1;
             var m2;
             var m3;
+            var m4;
             m1 = new matchingJaroWinkler();
             m2 = new matchingMetaphone();
             m3 = new machingDeterministico();  //'Levenshtein'
+            m4 = new matchingSoundexES();
 
             if (algoritmo == '') {
                 valorJW = m1.machingJaroWinkler(pacienteA, pacienteB, weights);
                 valorM = m2.machingMetaphone(pacienteA, pacienteB, weights);
+                valorS = m4.matchingSoundex(pacienteA, pacienteB, weights);
                 valorL = m3.maching(pacienteA, pacienteB, weights);
-                listaMatch.push({ paciente1: par[0], paciente2: par[1], matchL: valorL, matchJW: valorJW, matchM: valorM });
+                listaMatch.push({ paciente1: par[0], paciente2: par[1], matchL: valorL, matchJW: valorJW, matchM: valorM, matchS: valorS });
             }
             else {
                 if (algoritmo == 'Jaro Winkler') {
@@ -121,12 +126,17 @@ export class matching {
 
                         valor = m2.machingMetaphone(pacienteA, pacienteB, weights);
 
-                    }
-                    else {
+                    }else{
+                        if (algoritmo == 'Soundex') {
 
-                        valor = m3.maching(pacienteA, pacienteB, weights); //Levensthein
+                            valor = m4.matchingSoundex(pacienteA, pacienteB, weights);
 
+                        }else {
+                            valor = m3.maching(pacienteA, pacienteB, weights); //Levensthein
+
+                        }
                     }
+                    
 
                 }
 
