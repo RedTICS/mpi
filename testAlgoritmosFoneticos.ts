@@ -7,5 +7,5 @@ import { soundexES} from './soundexES';
 
   console.log(distance('Natalia', 'Carina', { caseSensitive: false }));
 
-  var algSoundex = new soundexES();
+var algSoundex = new soundexES();
 console.log(algSoundex.soundex('Abadia'));

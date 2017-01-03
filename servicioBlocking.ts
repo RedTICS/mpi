@@ -19,7 +19,7 @@ se arman los pares de pacientes para aplicar el match
 export class servicioBlocking {
 
     obtenerPacientes(condicion, coleccion, limite ? : number) {
-        var url = config.urlMigraSips;
+        var url = config.urlMigracion;
         console.log('URL', url, condicion);
         //var url = 'mongodb://localhost:27017/andes';
         return new Promise((resolve, reject) => {
@@ -68,7 +68,7 @@ export class servicioBlocking {
     }
 
     guardarPaciente(paciente) {
-        var url = config.urlMigraSips;
+        var url = config.urlMigracion;
         return new Promise((resolve, reject) => {
             mongodb.MongoClient.connect(url, function (err, db) {
                 db.collection("paciente").insertOne(paciente, function (err, item) {
@@ -88,14 +88,14 @@ export class servicioBlocking {
     }
 
     updatePaciente(paciente, clave) {
-        var url = config.urlMigraSips;
+        var url = config.urlMigracion;
         return new Promise((resolve, reject) => {
             mongodb.MongoClient.connect(url, function (err, db) {
                 db.collection("paciente").updateOne({
                     _id: paciente._id
                 }, {
                     $set: {
-                        clavesBlocking: clave
+                        claveBlocking: clave
                     }
                 }, function (err, item) {
                     if (err) {
@@ -149,6 +149,7 @@ export class servicioBlocking {
         var algSoundex = new soundexES();
         claves.push(algSoundex.soundex(paciente["apellido"] + paciente["nombre"]));
         claves.push(algSoundex.soundex(paciente["apellido"]));
+        claves.push(paciente["clusterId"].toString());
         return claves;
 
     }
@@ -156,10 +157,10 @@ export class servicioBlocking {
     asignarClaveBlocking() {
         /*Se recorren los pacientes en el migrasips para asignarles las claves de blocking*/
         var listaPacientes = [];
-        var url = config.urlMigraSips;
+        var url = config.urlMigracion;
         var cant = 0;
         return new Promise((resolve, reject) => {
-            this.obtenerPacientes({}, "paciente") //paciente por mutatedPatient
+            this.obtenerPacientes({ "idPaciente": { "$gte": 860001, "$lte": 910000 }}, "paciente") //paciente por mutatedPatient
                 .then((res => {
                     let lista;
                     lista = res;
@@ -168,6 +169,7 @@ export class servicioBlocking {
                             //for (var i = 0; i < 10000; i++)
                             //Se asignan las claves de blocking
                             //var paciente = lista[i];
+                            //console.log("Paciente", paciente);
                             var claves = this.crearClavesBlocking(paciente);
                             console.log("Claves", claves);
                             //paciente["claveBlocking"] = claves;
@@ -199,18 +201,11 @@ export class servicioBlocking {
                                         if (err) {
                                             reject(err);
                                         } else {
-                                            cant = cant + 1;
-                                            if (cant == 500) {
-                                                db.close();
-                                                resolve(listaPacientes);
-
-                                            }
-
+                                            db.close();
+                                            resolve(listaPacientes);
                                         }
 
                                     });
-
-
                                 })
                             }
 
@@ -428,7 +423,6 @@ export class servicioBlocking {
                                     }))
                              
                             //console.log('y por aca');
-                           
                             //return pac
                         }))
                 })

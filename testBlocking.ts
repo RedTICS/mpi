@@ -8,6 +8,7 @@ import {
     matching
 } from './matching';
 
+import * as mongodb from 'mongodb';
 
 var servicio = new servicioBlocking();
 // var listaTargetId;
@@ -45,6 +46,7 @@ var servicio = new servicioBlocking();
 //         let lista;
 //         lista = res;
 //         if (lista) {
+//             console.log('Total Actualizado: ', lista.length)
 //             console.log('FIN')
 //         }
 
@@ -53,21 +55,42 @@ var servicio = new servicioBlocking();
 //         console.log('Error al generar lista de Pacientes', err);
 //     }))
 
+servicio.obtenerPacientes({"clusterId": { "$gte": 0, "$lte": 2000 }},'paciente')
+.then(res => {
+    var listaPac;
+    listaPac = res;
+    var url = 'mongodb://localhost:27017/migracion';
+    //console.log(listaPac)
+    mongodb.MongoClient.connect(url, function (err, db) {
+    listaPac.forEach(pac => {
+        pac.claveBlocking[5] = pac.clusterId.toString();
+            db.collection("paciente").save(pac, function (err, item) {
+                if (err) {
+                    console.log('Error');
+                } else {
+                    console.log(item)
+                }
+            });
+            
+        });
+      db.close();  
+    })
+})
 
-var targetBlocking = "ZZRSMRM";
+// var targetBlocking = "ZZRSMRM";
 
-var coleccion = "paciente";
-var coleccionBlocking = "clavesAgrupadasPacientes";
-var ventanaBlocking = 5;
+// var coleccion = "paciente";
+// var coleccionBlocking = "clavesAgrupadasPacientes";
+// var ventanaBlocking = 5;
 
 
-    //VER COMO ARREGLAR ESTA PARTE PARA QUE PASE LOS DATOS
-    servicio.getPacientBlockingWindow(targetBlocking,coleccion,coleccionBlocking,ventanaBlocking)
-        .then((pacientes =>{
+//     //VER COMO ARREGLAR ESTA PARTE PARA QUE PASE LOS DATOS
+//     servicio.getPacientBlockingWindow(targetBlocking,coleccion,coleccionBlocking,ventanaBlocking)
+//         .then((pacientes =>{
 
-            console.log(pacientes);
+//             console.log(pacientes);
         
-        }))
+//         }))
         
 
     
