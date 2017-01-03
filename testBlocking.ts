@@ -77,59 +77,6 @@ servicio.obtenerPacientes({"clusterId": { "$gte": 0, "$lte": 2000 }},'paciente')
     })
 })
 
-<<<<<<< HEAD
-// var targetBlocking = "ZZRSMRM";
-=======
-var targetBlocking = "SRKRN";
->>>>>>> c68df0e6a2243041124ee2d2d8bd80ab453dfe68
-
-// var coleccion = "paciente";
-// var coleccionBlocking = "clavesAgrupadasPacientes";
-// var ventanaBlocking = 5;
-
-
-<<<<<<< HEAD
-//     //VER COMO ARREGLAR ESTA PARTE PARA QUE PASE LOS DATOS
-//     servicio.getPacientBlockingWindow(targetBlocking,coleccion,coleccionBlocking,ventanaBlocking)
-//         .then((pacientes =>{
-=======
-
-    servicio.getPacientBlockingWindow(targetBlocking,coleccion,coleccionBlocking,ventanaBlocking)
-        .then((pacientes =>{
->>>>>>> c68df0e6a2243041124ee2d2d8bd80ab453dfe68
-
-//             console.log(pacientes);
-        
-//         }))
-        
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // servicio.getClavesBlockingVecinas(targetBlocking,ventanaBlocking,coleccionBlocking)
 //     .then((clavesBlocking=>{
