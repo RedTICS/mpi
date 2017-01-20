@@ -62,6 +62,69 @@ export class matching {
             return ((fecha.toString()).substring(0, 10));
     }
 
+    matchPersonas(persona1, persona2, weights, algoritmo) {
+        var pacienteA;
+        var pacienteB;
+        var valor: number;
+        var m1;
+        var m2;
+        var m3;
+        var m4;
+        m1 = new matchingJaroWinkler();
+        m2 = new matchingMetaphone();
+        m3 = new machingDeterministico();  //'Levenshtein'
+        m4 = new matchingSoundexES();
+        valor = 0;
+
+        pacienteA = {
+            identity: persona1.documento,
+            firstname: persona1.nombre,
+            lastname: persona1.apellido,
+            birthDate: this.convertirFecha(persona1.fechaNacimiento),
+            gender: persona1.sexo
+        };
+
+        pacienteB = {
+            identity: persona2.documento,
+            firstname: persona2.nombre,
+            lastname: persona2.apellido,
+            birthDate: this.convertirFecha(persona2.fechaNacimiento),
+            gender: persona2.sexo
+        };
+
+
+        if (algoritmo == 'Jaro Winkler') {
+
+            valor = m1.machingJaroWinkler(pacienteA, pacienteB, weights);
+
+        }
+
+        else {
+            if (algoritmo == 'Metaphone') {
+
+                valor = m2.machingMetaphone(pacienteA, pacienteB, weights);
+
+            } else {
+                if (algoritmo == 'Soundex') {
+
+                    valor = m4.matchingSoundex(pacienteA, pacienteB, weights);
+
+                } else {
+
+                    valor = m3.maching(pacienteA, pacienteB, weights); //Levensthein
+
+                }
+            }
+
+
+        }
+
+        return valor;
+
+
+
+    }
+
 
     matchPares(listaPares, listaMatch, weights, algoritmo, collection) {
         /*Se aplica el algoritmo de matcheo por cada par
@@ -126,17 +189,17 @@ export class matching {
 
                         valor = m2.machingMetaphone(pacienteA, pacienteB, weights);
 
-                    }else{
+                    } else {
                         if (algoritmo == 'Soundex') {
 
                             valor = m4.matchingSoundex(pacienteA, pacienteB, weights);
 
-                        }else {
+                        } else {
                             valor = m3.maching(pacienteA, pacienteB, weights); //Levensthein
 
                         }
                     }
-                    
+
 
                 }
 

@@ -17,61 +17,100 @@ se arman los pares de pacientes para aplicar el match
 
 */
 export class servicioBlocking {
-
+  
     obtenerPacientes(condicion, coleccion, limite ? : number) {
         var url = config.urlMigracion;
         console.log('URL', url, condicion);
+
         //var url = 'mongodb://localhost:27017/andes';
         return new Promise((resolve, reject) => {
-
-            if (limite) {
-                mongodb.MongoClient.connect(url, function (err, db) {
-                    db.collection(coleccion).find(
-                        condicion
-                    ).limit(limite).toArray(function (err, items) {
+            try {
+                if (limite) {
+                    mongodb.MongoClient.connect(url, function(err, db) {
                         if (err) {
-                            console.log('Error obtenerPacientes', err);
-                            reject(err);
-                        } else {
-                            resolve(items);
-                            db.close();
+                          console.log("Error al conectarse a la base", err)
                         }
-                    })
+                        db.collection(coleccion).find(
+                            condicion
+                        ).limit(limite).toArray(function(err, items) {
+                            if (err) {
+                                console.log('Error obtenerPacientes', err);
+                                reject(err);
+                            } else {
+                                console.log('ObtenerPacientes');
+                                resolve(items);
+                                db.close();
+                            }
+                        })
 
 
-                });
+                    });
+
+                } else {
+                    mongodb.MongoClient.connect(url, function(err, db) {
+                        db.collection(coleccion).find(
+                            condicion
+                        ).toArray(function(err, items) {
+                            if (err) {
+                                console.log('Error obtenerPacientes', err);
+                                reject(err);
+                            } else {
+                                console.log('Resuelve la promesa')
+                                resolve(items);
+                                db.close();
+                            }
+                        })
+
+                    });
 
 
-
-            } else {
-                mongodb.MongoClient.connect(url, function (err, db) {
-                    db.collection(coleccion).find(
-                        condicion
-                    ).toArray(function (err, items) {
-                        if (err) {
-                            console.log('Error obtenerPacientes', err);
-                            reject(err);
-                        } else {
-                            resolve(items);
-                            db.close();
-                        }
-                    })
-
-
-                });
+                }
 
 
             }
+            catch (err) {
+                console.log('Error al obtener Pacientes', err);
+                reject(err);
+            }
+
 
         });
 
     }
 
+<<<<<<< HEAD
     guardarPaciente(paciente) {
+=======
+    obtenerCursor(condicion, coleccion) {
+        var url = config.urlMigracion;
+
+        try {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                var cursor = db.collection(coleccion).find(condicion);
+                cursor.each(function(err, doc) {
+                    if (err) throw err;
+                    if (doc) console.log(doc); // dispatching doc to async.queue
+                });
+
+                if (cursor.isClosed()) {
+                    console.log('all items have been processed');
+                    db.close();
+                }
+
+            });
+        }
+        catch (err) {
+            reject(err);
+        }
+
+    }
+
+    guardarPaciente(paciente, coleccion) {
+>>>>>>> servicioSisa
         var url = config.urlMigracion;
         return new Promise((resolve, reject) => {
-            mongodb.MongoClient.connect(url, function (err, db) {
-                db.collection("paciente").insertOne(paciente, function (err, item) {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                db.collection(coleccion).insertOne(paciente, function(err, item) {
                     if (err) {
                         reject(err);
                     } else {
@@ -87,13 +126,42 @@ export class servicioBlocking {
         });
     }
 
+    actualizarPaciente(pacienteOriginal, pacienteFusionar, coleccion) {
+        var url = config.urlMigracion;
+        return new Promise((resolve, reject) => {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                var query = { "_id": pacienteFusionar._id };
+                db.collection(coleccion).findOne(query, function(err, data) {
+                    if (err) {
+                        reject(err);
+                    };
+                    var pacAux;
+                    pacAux = data;
+                    var arrayIds = pacAux.identificadores;
+                    db.collection(coleccion).update({ "_id": pacienteOriginal._id }, { $addToSet: { "identificadores": { $each: arrayIds } } }, { upsert: true },
+                        function(err) {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve();
+                                db.close();
+                            }
+                        });
+                });
+
+            });
+        })
+    }
+
+
     updatePaciente(paciente, clave) {
         var url = config.urlMigracion;
         return new Promise((resolve, reject) => {
-            mongodb.MongoClient.connect(url, function (err, db) {
+            mongodb.MongoClient.connect(url, function(err, db) {
                 db.collection("paciente").updateOne({
                     _id: paciente._id
                 }, {
+<<<<<<< HEAD
                     $set: {
                         claveBlocking: clave
                     }
@@ -104,8 +172,20 @@ export class servicioBlocking {
                         resolve(item);
                         db.close();
                     }
+=======
+                        $set: {
+                            clavesBlocking: clave
+                        }
+                    }, function(err, item) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(item);
+                            db.close();
+                        }
+>>>>>>> servicioSisa
 
-                });
+                    });
 
 
             });
@@ -154,9 +234,10 @@ export class servicioBlocking {
 
     }
 
-    asignarClaveBlocking() {
+    asignarClaveBlocking(coleccion) {
         /*Se recorren los pacientes en el migrasips para asignarles las claves de blocking*/
         var listaPacientes = [];
+<<<<<<< HEAD
         var url = config.urlMigracion;
         var cant = 0;
         return new Promise((resolve, reject) => {
@@ -184,9 +265,40 @@ export class servicioBlocking {
                             listaPacientes.push([{
                                 _id: paciente._id
                             }, claves]);
+=======
+        var serv = this;
+        var url = config.urlMigracion;
+        return new Promise((resolve, reject) => {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                if (err) {
+                    console.log('Error al conectarse a Base de Datos', err)
+                    reject(err);
+                }
+                var cursorStream = db.collection(coleccion).find({ claveBlocking: { $exists: false } }).stream();
+                cursorStream.on('close', function() {
+                    console.log('Close Stream');
+                    db.close();
+                    resolve('OK')
+                });
+                cursorStream.on('data', function(paciente) {
 
-                        })
+                    if (paciente != null) {
+                        console.log(paciente);
+                        let claves = serv.crearClavesBlocking(paciente);
+                        db.collection(coleccion).updateOne({
+                            _id: paciente._id
+                        },
+                            {
+                                $set: { claveBlocking: claves }
+                            }, function(err, item) {
+                                if (err) {
+                                    console.log('Error update', err);
+                                }
+>>>>>>> servicioSisa
+
+                            });
                     }
+<<<<<<< HEAD
                     if (lista.length == listaPacientes.length) {
                         console.log('Total Pacientes a Actualizar', listaPacientes.length);
                         mongodb.MongoClient.connect(url, function (err, db) {
@@ -214,15 +326,15 @@ export class servicioBlocking {
                         });
 
 
+=======
+                    else {
+                        resolve('OK')
+                        db.close();
+>>>>>>> servicioSisa
 
                     }
-
-
-                }))
-                .catch((err => {
-                    console.log('Error al generar lista de Pacientes', err);
-                    reject(err);
-                }))
+                })
+            })
 
         })
 
@@ -296,48 +408,48 @@ export class servicioBlocking {
     condicion: La query en mongo para filtrar por la clave de servicioBlocking.
     */
     getPacientesPorClaveBlocking(claveBlocking, coleccion) {
-            var url = config.urlMigraSips;
+        var url = config.urlMigraSips;
 
-            return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
 
-                mongodb.MongoClient.connect(url, function (err, db) {
-                    db.collection(coleccion).find({
-                        "claveBlocking": claveBlocking
-                    }).toArray(function (err, items) {
-                        if (err) {
-                            console.log('Error obtenerPacientes', err);
-                            reject(err);
-                        } else {
-                            resolve(items);
-                            db.close();
-                        }
-                    })
-
-                });
+            mongodb.MongoClient.connect(url, function(err, db) {
+                db.collection(coleccion).find({
+                    "claveBlocking": claveBlocking
+                }).toArray(function(err, items) {
+                    if (err) {
+                        console.log('Error obtenerPacientes', err);
+                        reject(err);
+                    } else {
+                        resolve(items);
+                        db.close();
+                    }
+                })
 
             });
 
-        } //Fin getPacientesPorClaveBlocking
+        });
+
+    } //Fin getPacientesPorClaveBlocking
 
 
     getClavesBlockingVecinas(claveBlocking, cantVecinos, coleccion) {
         var url = config.urlMigraSips;
         return new Promise((resolve, reject) => {
-            mongodb.MongoClient.connect(url, function (err, db) {
+            mongodb.MongoClient.connect(url, function(err, db) {
 
                 db.collection(coleccion).find({}, {
-                        _id: 1
-                    }).sort({
-                        _id: 1
-                    })
-                    .toArray(function (err, items) {
+                    _id: 1
+                }).sort({
+                    _id: 1
+                })
+                    .toArray(function(err, items) {
                         if (err) {
                             console.log('Error obteniendo claves de blocking vecinas', err);
                             reject(err);
                         } else {
                             //Luego de obtener el array de claves de blocking en memoria y ordenarlos busco los vecinos
 
-                            var indiceBlocking = items.findIndex(function (item) {
+                            var indiceBlocking = items.findIndex(function(item) {
                                 return item._id == claveBlocking
                             });
 
@@ -349,20 +461,16 @@ export class servicioBlocking {
 
                                 posVecinosIzq = 0;
                                 posVecinosDer = posVecinosDer + (cantVecinos - indiceBlocking);
-
                                 if (posVecinosDer > cantidadElem) {
                                     //Si me paso de la cantidad de vecinos a derecha, tomo todos los posibles a derecha
                                     posVecinosDer = cantidadElem - indiceBlocking
                                 }
-
                             }
 
                             if (posVecinosDer > cantidadElem) {
 
                                 posVecinosDer = cantidadElem + 1;
-
                                 posVecinosIzq = posVecinosIzq + (cantidadElem - indiceBlocking - cantVecinos) + 1;
-
 
                                 if (posVecinosIzq < 0) {
 
@@ -372,7 +480,7 @@ export class servicioBlocking {
                             }
 
                             var vecinos = items.slice(posVecinosIzq, posVecinosDer);
-               
+
                             resolve(vecinos);
 
                             db.close();
@@ -385,23 +493,10 @@ export class servicioBlocking {
 
 
     getPacientBlockingWindow(targetBlocking, coleccion, coleccionBlocking, ventanaBlocking) {
-            let pac = [];
-            return new Promise((resolve, reject) => {
+        let pac = [];
+        return new Promise((resolve, reject) => {
 
-                    this.getClavesBlockingVecinas(targetBlocking, ventanaBlocking, coleccionBlocking)
-                        .then((clavesBlocking => {
-                            //Hago la conversión a array con el map 
-                            var arrayClavesBlocking = Object.keys(clavesBlocking).map(function (key) {
-                                return clavesBlocking[key];
-                            });
-                            console.log(clavesBlocking);
-                            var arrayPromise = [];
-                            arrayClavesBlocking.forEach(elem => {
-                                var claveBlocking = elem._id;
-                                //let pac2 = this.getPacientesPorClaveBlocking (claveBlocking,coleccion);
-                                arrayPromise.push(this.getPacientesPorClaveBlocking(claveBlocking, coleccion));                                   
-                            })
-
+<<<<<<< HEAD
                              Promise.all(arrayPromise).then((res => {
                                         let pac2
                                         pac2 = res;
@@ -415,10 +510,43 @@ export class servicioBlocking {
                                         console.log('Error al obtener la lista de pacienes por clave de blocking', err);
                                         reject(err);
                                     }))
-                             
+
                             //console.log('y por aca');
                             //return pac
+=======
+            this.getClavesBlockingVecinas(targetBlocking, ventanaBlocking, coleccionBlocking)
+                .then((clavesBlocking => {
+                    //Hago la conversión a array con el map
+                    var arrayClavesBlocking = Object.keys(clavesBlocking).map(function(key) {
+                        return clavesBlocking[key];
+                    });
+                    console.log(clavesBlocking);
+                    var arrayPromise = [];
+                    arrayClavesBlocking.forEach(elem => {
+                        var claveBlocking = elem._id;
+                        //let pac2 = this.getPacientesPorClaveBlocking (claveBlocking,coleccion);
+                        arrayPromise.push(this.getPacientesPorClaveBlocking(claveBlocking, coleccion));
+                    })
+
+                    Promise.all(arrayPromise).then((res => {
+                        let pac2
+                        pac2 = res;
+                        pac2 = Object.keys(res).map(function(key) {
+                            return res[key]
+                        });
+                        pac = pac.concat(pac2);
+                        resolve(pac);
+                    }))
+                        .catch((err => {
+                            console.log('Error al obtener la lista de pacienes por clave de blocking', err);
+                            reject(err);
+>>>>>>> servicioSisa
                         }))
-                })
-            }
+
+                    //console.log('y por aca');
+
+                    //return pac
+                }))
+        })
+    }
 }
