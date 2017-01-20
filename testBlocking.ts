@@ -40,37 +40,37 @@ var servicio = new servicioBlocking();
 //
 // }
 
-// servicio.asignarClaveBlocking()
-//     .then((res => {
-//         let lista;
-//         lista = res;
-//         if (lista) {
-//             console.log('FIN')
-//         }
+servicio.asignarClaveBlocking("pacienteSips")
+    .then((res => {
+        let lista;
+        lista = res;
+        if (lista) {
+            console.log('FIN')
+        }
 
-//     }))
-//     .catch((err => {
-//         console.log('Error al generar lista de Pacientes', err);
-//     }))
-
-
-var targetBlocking = "SRKRN";
-
-var coleccion = "paciente";
-var coleccionBlocking = "clavesAgrupadasPacientes";
-var ventanaBlocking = 5;
+    }))
+    .catch((err => {
+        console.log('Error al generar lista de Pacientes', err);
+    }))
 
 
+// var targetBlocking = "SRKRN";
+//
+// var coleccion = "paciente";
+// var coleccionBlocking = "clavesAgrupadasPacientes";
+// var ventanaBlocking = 5;
+//
+//
+//
+//     servicio.getPacientBlockingWindow(targetBlocking,coleccion,coleccionBlocking,ventanaBlocking)
+//         .then((pacientes =>{
+//
+//             console.log(pacientes);
+//
+//         }))
 
-    servicio.getPacientBlockingWindow(targetBlocking,coleccion,coleccionBlocking,ventanaBlocking)
-        .then((pacientes =>{
 
-            console.log(pacientes);
-        
-        }))
-        
 
-    
 
 
 
@@ -100,11 +100,11 @@ var ventanaBlocking = 5;
 
 // servicio.getClavesBlockingVecinas(targetBlocking,ventanaBlocking,coleccionBlocking)
 //     .then((clavesBlocking=>{
-//             //Hago la conversión a array con el map 
+//             //Hago la conversión a array con el map
 //             var arrayClavesBlocking = Object.keys(clavesBlocking).map(function (key) { return clavesBlocking[key]; });
-           
+
 //             arrayClavesBlocking.forEach(elem => {
-            
+
 //             var claveBlocking = elem._id;
 //                 servicio.getPacientesPorClaveBlocking(claveBlocking, coleccion)
 //                 .then((res => {
@@ -116,6 +116,3 @@ var ventanaBlocking = 5;
 //                     }))
 //         })
 //     }))
-
-
-
