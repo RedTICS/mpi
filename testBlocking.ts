@@ -118,24 +118,6 @@ servicio.asignarClaveBlocking("pacienteSips")
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> servicioSisa
-
-
 // servicio.getClavesBlockingVecinas(targetBlocking,ventanaBlocking,coleccionBlocking)
 //     .then((clavesBlocking=>{
 //             //Hago la conversión a array con el map

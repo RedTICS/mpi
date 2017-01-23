@@ -27,7 +27,7 @@ export class servicioMatchSisa {
 
 
         return new Promise((resolve, reject) => {
-            servicio.obtenerPacientes({ "estado": "temporal" , "matchSisa":{$exists:false}}, coleccion,200)
+            servicio.obtenerPacientes({ "estado": "temporal", "matchSisa": { $exists: false } }, coleccion, 200)
                 .then((res => {
                     let lista = res;
                     if (lista) {
@@ -44,11 +44,11 @@ export class servicioMatchSisa {
                                     console.log(p[0], p[1]);
                                     let match = p[1];
                                     let pacienteSisa = p[2];
-                                    if (pacienteSisa){
-                                      console.log(pacienteSisa);
+                                    if (pacienteSisa) {
+                                        console.log(pacienteSisa);
                                     }
                                     if (match >= 0.99) {
-                                        console.log('Dir', "Match",match);
+                                        console.log('Dir', "Match", match);
                                         db.collection(coleccion).updateOne(p[0], {
                                             $addToSet: { "entidadesValidadoras": "Sisa" },
                                             $set: {
@@ -64,20 +64,19 @@ export class servicioMatchSisa {
 
                                         });
                                     }
-                                    else{
-                                      db.collection(coleccion).updateOne(p[0], {
-                                          $set: {
-                                              matchSisa: match
-                                          }
-                                      }, function(err, item) {
-                                          if (err) {
-                                              reject(err);
-                                          } else {
-                                              db.close();
-                                              resolve(item);
-                                          }
-
-                                      });
+                                    else {
+                                        db.collection(coleccion).updateOne(p[0], {
+                                            $set: {
+                                                matchSisa: match
+                                            }
+                                        }, function(err, item) {
+                                            if (err) {
+                                                reject(err);
+                                            } else {
+                                                resolve(item);
+                                                db.close();
+                                            }
+                                        });
                                     }
 
 
@@ -126,11 +125,20 @@ export class servicioMatchSisa {
 
                                     switch (resultado[1].Ciudadano.resultado) {
                                         case 'OK':
-                                            pacienteSisa = servSisa.formatearDatosSisa(resultado[1].Ciudadano);
-                                            matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights, 'Levenshtein');
-                                            resolve([{
-                                                _id: paciente._id
-                                            }, matchPorcentaje,pacienteSisa]);
+                                            if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
+
+                                                pacienteSisa = servSisa.formatearDatosSisa(resultado[1].Ciudadano);
+                                                matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights, 'Levenshtein');
+                                                resolve([{
+                                                    _id: paciente._id
+                                                }, matchPorcentaje, pacienteSisa]);
+                                            }
+                                            else {
+                                                resolve([{
+                                                    _id: paciente._id
+                                                }, 0, {}]);
+                                            }
+
                                             break;
                                         case 'MULTIPLE_RESULTADO':
                                             var sexo = "F";
@@ -148,7 +156,7 @@ export class servicioMatchSisa {
                                                         matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights, 'Levenshtein');
                                                         resolve([{
                                                             _id: paciente._id
-                                                        }, matchPorcentaje,pacienteSisa]);
+                                                        }, matchPorcentaje, pacienteSisa]);
                                                     }
 
                                                 })
@@ -168,7 +176,7 @@ export class servicioMatchSisa {
                             }
                             resolve([{
                                 _id: paciente._id
-                            }, 0,{}]);
+                            }, 0, {}]);
 
 
                         })
@@ -191,7 +199,7 @@ export class servicioMatchSisa {
             else {
                 resolve([{
                     _id: paciente._id
-                }, matchPorcentaje,{}]);
+                }, matchPorcentaje, {}]);
             }
 
 

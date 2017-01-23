@@ -37,7 +37,7 @@ export class servicioBlocking {
                                 console.log('Error obtenerPacientes', err);
                                 reject(err);
                             } else {
-                                console.log('ObtenerPacientes');
+                                console.log('Obtener Pacientes');
                                 resolve(items);
                                 db.close();
                             }
