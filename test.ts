@@ -50,7 +50,7 @@ var tests = [
   "complicado",
   "xocola",
   "chocolate",
-  "Fernández hugo",	
+  "Fernández hugo",
   "Hernandez Hugo",
   "Silvina Roga",
   "Silvia Roa",
@@ -65,9 +65,10 @@ var dato = m.matchingSoundex(pacienteA, pacienteB, weights);
 console.log(dato);
 
 var m1 = new machingDeterministico();
-var dato1 = m1.maching(pacienteA, pacienteB, weights);
-console.log("matchig: ", dato1);
+// var dato1 = m1.maching(pacienteA, pacienteB, weights);
+// console.log("matchig: ", dato1);
 
+console.log('Provincia',m1.levenshtein('Neuquén', 'Nqn'));
 
 // for(var i=0;i<tests.length;i++){
 // 	var dato = so.soundex(tests[i]);

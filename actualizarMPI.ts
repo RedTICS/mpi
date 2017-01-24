@@ -1,21 +1,22 @@
-import {servicioBlocking} from './servicioBlocking';
+import {postPaciente} from './postPaciente';
 import {machingDeterministico} from './machingDeterministico';
 import {matching} from './matching';
 import * as config from './config';
 import * as mongodb from 'mongodb';
 
-var servicio = new servicioBlocking();
 
 var listaPaciente;
 var listaMatch = [];
 var match = new matching();
+var post = new postPaciente();
 let coleccion = "pacienteSips";
+
 
 
 try {
     var arrayPromise = [];
     var url = config.urlMigracion;
-    var condicion = { estado: "validado" };
+    var condicion = { estado: "validado", "migrado": { $exists: false } };
     mongodb.MongoClient.connect(url, function(err, db) {
         if (err) {
             console.log('Error al conectarse a Base de Datos: ', err)
@@ -30,12 +31,36 @@ try {
             if (data != null) {
 
                 //Se buscan los documentos con la misma clave de blocking y se realizan los matcheos
-                //En caso de encontrar un documento en el bloque que matchea al 100% el documento no se inserta
-                //En caso contrario se inserta siempre
+                //En caso de encontrar un documento en el bloque que matchea al 100% la función devuelve vacío
+                //En caso contrario devuelve un paciente que se debe insertar
                 buscarBloque(data, "paciente")
                     .then((paciente) => {
                         if (paciente) {
+                            //Devuelve un paciente válido que debe insertarse
                             console.log('Paciente', paciente);
+                            //Se guarda el paciente a través de la API
+                            post.cargarUnPacienteAndes(paciente)
+                                .then((rta) => {
+                                    console.log('Paciente Guardado', rta);
+                                    //Se actualiza el paciente
+                                })
+                                .catch((err) => {
+                                    console.error('Error Post**:', err);
+                                })
+                            //Se actualiza el paciente como migrado
+                            db.collection(coleccion).updateOne(data, {
+                                $set: {
+                                     "migrado": true
+                                }
+                            }, function (err, item) {
+                                if (err) {
+                                    console.log(err);
+                                }
+                                else {
+                                    console.log('Paciente actualizado');
+                                }
+                            });
+
                         }
 
                     })
@@ -97,7 +122,7 @@ function buscarBloque(paciente, coleccion) {
                         matchPorcentaje = match.matchPersonas(paciente, pacienteBloque, weights, 'Levenshtein');
                         if (matchPorcentaje == 1) {
                             db.close();
-                            resolve({})  //Caso en que se econtró un paciente en el bloque que matcheo al 100% y no necesita insertarse
+                            resolve({})  //Caso en que se encontró un paciente en el bloque que matcheo al 100% y no necesita insertarse
                         }
                     }
                 });

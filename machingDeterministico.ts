@@ -61,7 +61,7 @@ export class machingDeterministico {
      * @param {string} stringB - Segundo string a comparar
      * @author Hugo Fernández hfernandez@neuquen.gov.ar
      */
-    private levenshtein(stringA: string, stringB: string): number {
+    public levenshtein(stringA: string, stringB: string): number {
         //var s1 = libString.preprocessInput(stringA.toLowerCase());
         //var s2 = libString.preprocessInput(stringB.toLowerCase());
         var s1 = stringA;
@@ -126,7 +126,7 @@ export class machingDeterministico {
         //console.log(v3);
        // console.log('levenshtein de documento: '+v4);
         var value = Math.round((v1 + v2 + v3 + v4) * 100) / 100;
-        
+
         return value;
     }
 

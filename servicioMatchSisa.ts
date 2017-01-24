@@ -1,4 +1,3 @@
-
 import * as config from './config';
 import * as mongodb from 'mongodb';
 import {servicioSisa} from '../api/utils/servicioSisa';
@@ -94,9 +93,7 @@ export class servicioMatchSisa {
                     console.log('Error al obtener los pacientes', err);
                     reject(err);
                 }))
-
         })
-
     }
 
 
