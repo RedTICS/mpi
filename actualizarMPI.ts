@@ -16,7 +16,7 @@ let coleccion = "pacienteSips";
 try {
     var arrayPromise = [];
     var url = config.urlMigracion;
-    var condicion = { estado: "validado", "migrado": { $exists: false } };
+    var condicion = { estado: "validado", "migrado": false};  //"migrado": { $exists: false }
     mongodb.MongoClient.connect(url, function(err, db) {
         if (err) {
             console.log('Error al conectarse a Base de Datos: ', err)
@@ -25,7 +25,7 @@ try {
         // Se ejecuta una vez que devuelve todos los documentos
         cursorStream.on('end', function() {
             console.log('El proceso de actualización ha finalizado');
-            db.close();
+            //db.close();
         });
         cursorStream.on('data', function(data) {
             if (data != null) {
@@ -33,33 +33,48 @@ try {
                 //Se buscan los documentos con la misma clave de blocking y se realizan los matcheos
                 //En caso de encontrar un documento en el bloque que matchea al 100% la función devuelve vacío
                 //En caso contrario devuelve un paciente que se debe insertar
+                let listaContactos=[];
+                if (data.contacto) {
+                    data.contacto.forEach((cto) => {
+                        if ((cto.tipo == "Teléfono Fijo") || (cto.tipo == "")) {
+                            cto.tipo = "fijo";
+                        }
+                        if (cto.tipo == "Teléfono Celular") {
+                          cto.tipo = "celular";
+                        }
+                        listaContactos.push(cto);
+                    })
+                }
+                data.contacto = listaContactos;
                 buscarBloque(data, "paciente")
-                    .then((paciente) => {
-                        if (paciente) {
+                    .then((res) => {
+                        let paciente = res;
+                        console.log('Paciente  a Insertar', paciente);
+                        if (!(paciente == {})) {
                             //Devuelve un paciente válido que debe insertarse
-                            console.log('Paciente', paciente);
                             //Se guarda el paciente a través de la API
                             post.cargarUnPacienteAndes(paciente)
                                 .then((rta) => {
-                                    console.log('Paciente Guardado', rta);
+                                    console.log('Paciente Guardado');
                                     //Se actualiza el paciente
+                                    //Se actualiza el paciente como migrado
+                                    db.collection(coleccion).updateOne(paciente, {
+                                        $set: {
+                                            "migrado": true
+                                        }
+                                    }, function(err, item) {
+                                        if (err) {
+                                            console.log(err);
+                                        }
+                                        else {
+                                            console.log('Paciente actualizado');
+                                        }
+                                    });
                                 })
                                 .catch((err) => {
                                     console.error('Error Post**:', err);
                                 })
-                            //Se actualiza el paciente como migrado
-                            db.collection(coleccion).updateOne(data, {
-                                $set: {
-                                     "migrado": true
-                                }
-                            }, function (err, item) {
-                                if (err) {
-                                    console.log(err);
-                                }
-                                else {
-                                    console.log('Paciente actualizado');
-                                }
-                            });
+
 
                         }
 
@@ -101,19 +116,9 @@ function buscarBloque(paciente, coleccion) {
                 let matchPorcentaje = 0;
                 // Execute find on all the documents
                 stream.on('end', function() {
-
                     //Se inserta el paciente validado en el repositorio
-                    db.collection(coleccion).insertOne(paciente, function(err, item) {
-                        if (err) {
-                            console.log('Error al guardar Pacientes');
-                            db.close();
-                            reject(err);
-                        }
-                        else {
-                            resolve(item);
-                            db.close();
-                        }
-                    });
+                    db.close();
+                    resolve(paciente);
 
                 });
                 stream.on('data', function(data) {
@@ -125,6 +130,7 @@ function buscarBloque(paciente, coleccion) {
                             resolve({})  //Caso en que se encontró un paciente en el bloque que matcheo al 100% y no necesita insertarse
                         }
                     }
+                    console.log('Buscar Bloque', data);
                 });
             }
         })

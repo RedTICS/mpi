@@ -56,7 +56,7 @@ export class postPaciente {
 
             var options = {
                 //host: 'localhost',
-                host:'10.1.62.17',
+                host:'localhost',
                 port: 3002,
                 path: '/api/core/mpi/pacientes',
                 method: 'POST',
@@ -69,7 +69,6 @@ export class postPaciente {
             var req = http.request(options, function(res) {
                 console.log("statusCode: ", res.statusCode);
                 res.on('data', function(body) {
-                    console.log('Body: ' + body);
                     resolve(body);
                 });
             });
