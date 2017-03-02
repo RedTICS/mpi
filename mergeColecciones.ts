@@ -1,6 +1,5 @@
 import {servicioBlocking} from './servicioBlocking';
-import {machingDeterministico} from './machingDeterministico';
-import {matching} from './matching';
+import  {matching} from 'andes-match/matching';
 import * as config from './config';
 import * as mongodb from 'mongodb';
 

@@ -4,11 +4,11 @@ import {libString} from './libString';
 
 var actualizarDir = new actualizarDatos();
 
-//Paso2: Se actualizan las ubicaciones
-let coleccion = "pacienteSips";
-let condicion= {};
+//Paso2: Se actualizan las ubicaciones y se limpian los datos del contacto
+let coleccion = "paciente";
+let condicion = {};
 
-  actualizarDir.actualizarUbicaciones(condicion,coleccion);
+  actualizarDir.actualizarUbicaciones(condicion, coleccion);
             //actualizarRelacionesSips();
 
 
@@ -42,3 +42,5 @@ let condicion= {};
             //             console.error('Error**:' + err);
             //         });
             // }
+
+      //Si se desea sólo limpiar los datos de contacto

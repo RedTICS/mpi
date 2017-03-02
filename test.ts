@@ -1,8 +1,8 @@
-import { IPerson } from './IPerson';
-import { IWeight } from './IWeight';
-import {machingDeterministico} from './machingDeterministico';
-import {matchingSoundexES} from './matchingSoundexES';
-import {soundexES} from './soundexES';
+import { IPerson } from 'andes-match/IPerson';
+import { IWeight } from 'andes-match/IWeight';
+import  {matchingAndes} from 'andes-match/matchingAndes';
+import { matchingSoundexES } from 'andes-match/matchingSoundexES';
+import { soundexES } from 'andes-match/soundexES';
 import * as distance from 'jaro-winkler';
 
 var weights = {
@@ -34,7 +34,6 @@ var pacienteB = {
 	gender: "male"
 };
 
-// var m = new machingDeterministico();
 // console.log(m.maching(pacienteA, pacienteB, weights));
 
 var so = new soundexES();
@@ -64,7 +63,7 @@ var m = new matchingSoundexES();
 var dato = m.matchingSoundex(pacienteA, pacienteB, weights);
 console.log(dato);
 
-var m1 = new machingDeterministico();
+var m1 = new matchingAndes();
 // var dato1 = m1.maching(pacienteA, pacienteB, weights);
 // console.log("matchig: ", dato1);
 

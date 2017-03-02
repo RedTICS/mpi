@@ -2,11 +2,8 @@ import {
     servicioBlocking
 } from './servicioBlocking';
 import {
-    machingDeterministico
-} from './machingDeterministico';
-import {
     matching
-} from './matching';
+} from 'andes-match/matching';
 
 import * as mongodb from 'mongodb';
 

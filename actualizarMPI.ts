@@ -1,12 +1,5 @@
-import {
-    postPaciente
-} from './postPaciente';
-import {
-    machingDeterministico
-} from './machingDeterministico';
-import {
-    matching
-} from './matching';
+import { postPaciente } from './postPaciente';
+import  {matching} from 'andes-match/matching';
 import * as config from './config';
 import * as mongodb from 'mongodb';
 

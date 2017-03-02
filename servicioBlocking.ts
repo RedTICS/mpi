@@ -2,13 +2,14 @@ import * as config from './config';
 import * as mongodb from 'mongodb';
 import {
     libString
-} from './libString';
+} from 'andes-match/libString';
 import {
     metaphoneES
-} from './metaphoneES';
+} from 'andes-match/metaphoneES';
 import {
     soundexES
-} from './soundexES';
+} from 'andes-match/soundexES';
+import {matching} from 'andes-match/matching';
 
 
 /*Se obtienen las claves de blocking
@@ -188,50 +189,12 @@ export class servicioBlocking {
         });
     }
 
-    /*Se crean las claves de blocking claveBlocking: [String],*/
-    crearClavesBlocking(paciente) {
-        console.log(paciente.fechaNacimiento);
-        var claves = [];
-        var fecha;
-        // var anioNacimiento = "1900";
-        // var doc = "";
-        // if (paciente["fechaNacimiento"]) {
-        //     fecha = paciente["fechaNacimiento"].split("-");
-        //     //fecha= paciente["fechaNacimiento"].toISOString().split("-");
-        //     anioNacimiento = fecha[0].toString();
-        // }
-        //
-        // if (paciente["documento"]) {
-        //     doc = paciente["documento"].substr(0, 4);
-        // }
-        //
-        // var clave = libString.obtenerConsonante(paciente.apellido, 3) + libString.obtenerConsonante(paciente.nombre, 2) +
-        //     anioNacimiento + doc;
-        //
-        // claves.push(clave);
 
-        // Se utiliza el algoritmo metaphone para generar otra clave de Blocking
-        // claves.push(paciente.clavesBlocking[0]);
-        // claves.push(paciente.clavesBlocking[1]);
-        // claves.push(paciente.clavesBlocking[2]);
-        var algMetaphone = new metaphoneES();
-        var claveApellido = algMetaphone.metaphone(paciente["apellido"]);
-        var claveNombre = algMetaphone.metaphone(paciente["nombre"]);
-        claves.push(claveApellido.slice(0, 4) + claveNombre.slice(0, 3));
-        claves.push(claveApellido);
-        claves.push(claveNombre);
-        //Se utiliza el algoritmo soundex para generar una nueva clave de Blocking
-        var algSoundex = new soundexES();
-        claves.push(algSoundex.soundex(paciente["apellido"] + paciente["nombre"]));
-        claves.push(algSoundex.soundex(paciente["apellido"]));
-        claves.push(paciente["clusterId"].toString());
-        return claves;
-
-    }
 
     asignarClaveBlocking(coleccion) {
         /*Se recorren los pacientes en el migrasips para asignarles las claves de blocking*/
         var listaPacientes = [];
+        var match = new matching();
         // var url = config.urlMigracion;
         // var cant = 0;
         // return new Promise((resolve, reject) => {
@@ -245,7 +208,7 @@ export class servicioBlocking {
         //                     //Se asignan las claves de blocking
         //                     //var paciente = lista[i];
         //                     //console.log("Paciente", paciente);
-        //                     var claves = this.crearClavesBlocking(paciente);
+        //                     var claves = match.crearClavesBlocking(paciente);
         //                     console.log("Claves", claves);
         //                     //paciente["claveBlocking"] = claves;
         //                     //Se guarda el paciente
@@ -262,6 +225,7 @@ export class servicioBlocking {
 
         var serv = this;
         var url = config.urlMigracion;
+
         return new Promise((resolve, reject) => {
             mongodb.MongoClient.connect(url, function(err, db) {
                 if (err) {
@@ -278,7 +242,7 @@ export class servicioBlocking {
 
                     if (paciente != null) {
                         console.log(paciente);
-                        let claves = serv.crearClavesBlocking(paciente);
+                        let claves = match.crearClavesBlocking(paciente);
                         db.collection(coleccion).updateOne({
                             _id: paciente._id
                         },
@@ -542,4 +506,46 @@ export class servicioBlocking {
                 }))
         })
     }
+
+    guardarMatch(match, collection) {
+        var url = config.urlMigraSips;
+        return new Promise((resolve, reject) => {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                db.collection(collection).insertOne(match, function(err, item) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(item);
+                        db.close();
+                    }
+
+                });
+
+
+            });
+
+        });
+    }
+
+    guardarListaMatch(listaMatch, coleccion: string) {
+        var url = config.urlMigraSips;
+        return new Promise((resolve, reject) => {
+            mongodb.MongoClient.connect(url, function(err, db) {
+                console.log('Total Match', listaMatch.length);
+                listaMatch.forEach(match => {
+                    db.collection(coleccion).insertOne(match, function(err, item) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(item);
+                        }
+
+                    });
+                });
+                db.close();
+            });
+
+        });
+    }
+
 }

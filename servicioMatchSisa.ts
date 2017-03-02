@@ -1,8 +1,7 @@
 import * as config from './config';
 import * as mongodb from 'mongodb';
 import {servicioSisa} from '../api/utils/servicioSisa';
-import {machingDeterministico} from './machingDeterministico';
-import {matching} from './matching';
+import  {matching} from 'andes-match/matching';
 
 import {
     servicioBlocking

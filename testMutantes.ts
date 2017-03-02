@@ -1,5 +1,5 @@
 import {servicioBlocking} from './servicioBlocking';
-import {matching} from './matching';
+import {matching} from 'andes-match/matching';
 
 
 var listaTargetId;
@@ -50,7 +50,7 @@ servicio.obtenerPacientes({}, "mutatedPatient")
                 match.matchPares(listaPares, listaMatch, weights, '', "matchMutantesE2");
                 console.log("Total Match", listaMatch.length);
 
-                match.guardarListaMatch(listaMatch, "matchMutantesE2")  //"matchMutantesL1E2"
+                servicio.guardarListaMatch(listaMatch, "matchMutantesE2")  //"matchMutantesL1E2"
                     .then((res) => {
                         console.log('Se guardó la lista de match');
                     })
@@ -104,7 +104,7 @@ servicio.obtenerPacientes({"targetid" : "4"}, "mutatedPatient")
                 match.matchPares(listaPares, listaMatch, weights, 'Levensthein', "matchMutantesL1E2M4");
                 console.log("Total Match", listaMatch.length);
 
-                match.guardarListaMatch(listaMatch, "matchMutantesL1E2M4")
+                servicio.guardarListaMatch(listaMatch, "matchMutantesL1E2M4")
                 .then((res) => {
                       console.log('Se guardó la lista de match');
                 })

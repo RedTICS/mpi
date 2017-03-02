@@ -1,6 +1,4 @@
-import {
-    servicioMatchSisa
-} from './servicioMatchSisa';
+import { servicioMatchSisa } from './servicioMatchSisa';
 
 
 var servSisa = new servicioMatchSisa();

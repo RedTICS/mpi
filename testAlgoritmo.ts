@@ -1,5 +1,4 @@
-
-import {matching} from './matching';
+import {matching} from 'andes-match/matching';
 import {servicioBlocking} from './servicioBlocking';
 
 

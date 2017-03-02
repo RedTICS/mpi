@@ -1,5 +1,5 @@
 import {servicioBlocking} from './servicioBlocking';
-import {matching} from './matching';
+import {matching} from 'andes-match/matching';
 
 
 var listaTargetId;
