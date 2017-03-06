@@ -10,7 +10,6 @@ export class postPaciente {
         return new Promise((resolve, reject) => {
 
             var options = {
-                //host: 'localhost',
                 host:'localhost',
                 port: 3002,
                 path: '/api/core/mpi/pacientes',
@@ -42,8 +41,8 @@ export class postPaciente {
         return new Promise((resolve, reject) => {
 
             var options = {
-                //host: 'localhost',
-                host:'10.1.62.17',
+                host: 'localhost',
+                //host:'10.1.62.17',
                 port: 3002,
                 path: '/api/core/mpi/pacientes/' + paciente._id,
                 method: 'PUT',

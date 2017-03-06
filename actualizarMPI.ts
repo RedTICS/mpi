@@ -1,5 +1,9 @@
-import { postPaciente } from './postPaciente';
-import  {matching} from 'andes-match/matching';
+import {
+    postPaciente
+} from './postPaciente';
+import {
+    matching
+} from './node_modules/andes-match/matching';
 import * as config from './config';
 import * as mongodb from 'mongodb';
 
@@ -9,23 +13,36 @@ var listaMatch = [];
 var match = new matching();
 var post = new postPaciente();
 let coleccion = "pacienteSips";
-var pacientesInsert =  [];
+var pacientesInsert = [];
 
 try {
     var arrayPromise = [];
-    //var url = config.urlMigracion;
-    var url = config.urlMongoAndes;
+    var url = config.urlMigracion;
+    //Traigo todos los pacientes que pasaron por la fuente auténtica SISA tanto validados como temporales
+    // La idea es insertarlos en andes y luego con un proceso posterior los validados subirlos a MPI con un proceso que sólo suba los validados
+    // y deje en esta base los temporales
     var condicion = {
-        estado: "validado"
+        $or: [{
+            "entidadesValidadoras.sisa": {
+                $exists: true
+            }
+        }, {
+            "matchSisa": {
+                $exists: true
+            }
+        }]
+        //"estado":"validado",
         // , migrado: false
     }; //"migrado": { $exists: false }
-    mongodb.MongoClient.connect(url, function(err, db) {
+
+    //Nos conectamos a la base cruda migrada de los efectores
+    mongodb.MongoClient.connect(url, function (err, db) {
         if (err) {
             console.log('Error al conectarse a Base de Datos: ', err)
         }
         var cursorStream = db.collection(coleccion).find(condicion).stream();
 
-        cursorStream.on('data', function(data) {
+        cursorStream.on('data', function (data) {
 
             if (data != null) {
 
@@ -52,41 +69,35 @@ try {
                 cursorStream.pause();
 
                 // Restart the stream after 1 miliscecond
-                setTimeout(function() {
+                setTimeout(function () {
                     buscarBloque(data, "paciente")
                         .then((res) => {
                             let paciente = res;
                             if (!(paciente == {})) {
-                               pacientesInsert.push(paciente);
+                                pacientesInsert.push(paciente);
                                 console.log('paciente en array', pacientesInsert.length);
+
                                 post.cargarUnPacienteAndes(paciente)
                                     .then((rta) => {
                                         console.log('Paciente Guardado');
-                                        // Se actualiza el paciente
-                                        // Se actualiza el paciente como migrado
-                                        mongodb.MongoClient.connect(url, function(err, db) {
-                                            if (err) {
-                                                console.log('Error al conectarse a Base de Datos: ', err)
+                                        db.collection(coleccion).updateOne({
+                                            "_id": paciente._id
+                                        }, {
+                                            $set: {
+                                                "migrado": true
                                             }
-                                            db.collection(coleccion).updateOne(paciente, {
-                                                $set: {
-                                                    "migrado": true
-                                                }
-                                            }, function(err, item) {
-                                                if (err) {
-                                                    console.log(err);
-                                                } else {
-                                                    db.close();
-                                                    console.log('Paciente actualizado');
-                                                }
-                                            });
-                                        })
-
+                                        }, function (err, item) {
+                                            if (err) {
+                                                console.log(err);
+                                            } else {
+                                                console.log('Paciente actualizado: ', paciente);
+                                            }
+                                        });
                                     })
+
                                     .catch((err) => {
                                         console.error('Error Post**:', err);
                                     })
-
                             }
                         })
                         .catch((err) => {
@@ -94,15 +105,15 @@ try {
                             console.log('Error al obtener el bloque de pacientes', err)
                         })
                     cursorStream.resume();
-                }, 40);
+                }, 100);
 
 
             }
         })
 
         // Se ejecuta una vez que devuelve todos los documentos
-        cursorStream.on('end', function() {
-          console.log('El proceso de actualización ha finalizado', pacientesInsert.length);
+        cursorStream.on('end', function () {
+            console.log('El proceso de actualización ha finalizado', pacientesInsert.length);
             // processArray(pacientesInsert, this.insertarPaciente)
             //     .then(function (result) {
             //         console.log(result);
@@ -135,7 +146,7 @@ function buscarBloque(paciente, coleccionPaciente) {
             "claveBlocking.0": paciente.claveBlocking[0]
         };
         var bloque = [];
-        mongodb.MongoClient.connect(url, function(err, db) {
+        mongodb.MongoClient.connect(url, function (err, db) {
             if (err) {
                 console.log("Error de conexión con ", err);
                 reject(err)
@@ -143,12 +154,12 @@ function buscarBloque(paciente, coleccionPaciente) {
                 var stream = db.collection(coleccionPaciente).find(condicion).stream();
                 let matchPorcentaje = 0;
                 // Execute find on all the documents
-                stream.on('end', function() {
+                stream.on('end', function () {
                     //Se inserta el paciente validado en el repositorio
                     db.close();
                     resolve(paciente);
                 });
-                stream.on('data', function(data) {
+                stream.on('data', function (data) {
                     if (data != null) {
                         let pacienteBloque = data;
                         matchPorcentaje = match.matchPersonas(paciente, pacienteBloque, weights, 'Levenshtein');
@@ -165,24 +176,24 @@ function buscarBloque(paciente, coleccionPaciente) {
 }
 
 function processArray(array, fn) {
-    return array.reduce(function(p, item) {
+    return array.reduce(function (p, item) {
         return p.then(fn);
     }, Promise.resolve());
 }
 
 function insertarPaciente(paciente) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         function delayResolve(data) {
-            setTimeout(function() {
+            setTimeout(function () {
                 // Se realiza el post de paciente y en el resolve devuelve el paciente
                 // Se guarda el paciente a través de la API
-                console.log('hace insert!!!')
+                //console.log('hace insert!!!')
                 post.cargarUnPacienteAndes(paciente)
                     .then((rta) => {
                         console.log('Paciente Guardado');
                         // Se actualiza el paciente
                         // Se actualiza el paciente como migrado
-                        mongodb.MongoClient.connect(url, function(err, db) {
+                        mongodb.MongoClient.connect(url, function (err, db) {
                             if (err) {
                                 console.log('Error al conectarse a Base de Datos: ', err)
                                 reject(err);
@@ -191,7 +202,7 @@ function insertarPaciente(paciente) {
                                 $set: {
                                     "migrado": true
                                 }
-                            }, function(err, item) {
+                            }, function (err, item) {
                                 if (err) {
                                     console.log(err);
                                 } else {
