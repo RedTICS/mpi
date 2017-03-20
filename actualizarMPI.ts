@@ -1,9 +1,7 @@
 import {
     postPaciente
 } from './postPaciente';
-import {
-    matching
-} from './node_modules/andes-match/matching';
+import  { matching } from "@andes/match/matching";
 import * as config from './config';
 import * as mongodb from 'mongodb';
 
@@ -18,22 +16,23 @@ var pacientesInsert = [];
 try {
     var arrayPromise = [];
     var url = config.urlMigracion;
-    //Traigo todos los pacientes que pasaron por la fuente auténtica SISA tanto validados como temporales
-    // La idea es insertarlos en andes y luego con un proceso posterior los validados subirlos a MPI con un proceso que sólo suba los validados
-    // y deje en esta base los temporales
+    
+    //Vamos a pasar toda la BD a Andes actualizando 
     var condicion = {
-        $or: [{
-            "entidadesValidadoras.sisa": {
-                $exists: true
-            }
-        }, {
-            "matchSisa": {
-                $exists: true
-            }
-        }]
-        //"estado":"validado",
-        // , migrado: false
-    }; //"migrado": { $exists: false }
+        
+        // $or:[{migrado:false}, {migrado:{$exists:"false"}}]
+        
+        
+        // $or: [{
+        //     "entidadesValidadoras.sisa": {
+        //         $exists: true
+        //     }
+        // }, {
+        //     "matchSisa": {
+        //         $exists: true
+        //     }
+        // }]
+    };
 
     //Nos conectamos a la base cruda migrada de los efectores
     mongodb.MongoClient.connect(url, function (err, db) {
@@ -62,9 +61,21 @@ try {
                         listaContactos.push(cto);
                     })
                 }
-
                 //console.log('Lista de contacto: ',listaContactos);
                 data.contacto = listaContactos;
+
+                let listaEntidades = [];
+                if (data.matchSisa){
+                    listaEntidades.push("Sisa|"+data.matchSisa); /* Para aquellos pacientes que pasaron por Sisa pero no validaron en menor % */
+                };
+                if (data.entidadesValidadoras){
+                    data.entidadesValidadoras.forEach((entidad) => {
+                        if (entidad == "Sisa")
+                            listaEntidades.push("Sisa|1") /* Valido al 100% */
+                    })
+                }
+                /* Guardo las entidades validadoras en el paciente */
+                data.entidadesValidadoras = listaEntidades;
 
                 cursorStream.pause();
 
