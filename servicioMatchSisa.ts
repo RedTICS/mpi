@@ -1,11 +1,8 @@
 import * as config from './config';
 import * as mongodb from 'mongodb';
 import {servicioSisa} from '../api/utils/servicioSisa';
-import  {matching} from 'andes-match/matching';
-
-import {
-    servicioBlocking
-} from './servicioBlocking';
+import {matching} from '@andes/match/matching';
+import {servicioBlocking} from './servicioBlocking';
 
 var servicio = new servicioBlocking();
 var servSisa = new servicioSisa();
@@ -14,86 +11,145 @@ var match = new matching();
 
 export class servicioMatchSisa {
 
-    asignarMatchSisa() {
-        /*Se recorren los pacientes en migracioa para asignarles el matcheo con Sisa*/
-        var arrayPromise = [];
-        var url = config.urlMigracion;
-        var cant = 0;
-        var matchPorcentaje;
-        var pacienteSisa;
-        var coleccion = "pacienteSips";
-
-
+    validarPacienteEnSisa(limite) {
+        let url = config.urlMongoAndes;
+        let coleccion = "paciente";
+        console.log('Se ingresa a validarPacienteEnSisa');
+        let condicion = { $or: [{"entidadesValidadoras": { $size: 0 }}, {"estado": "temporal"}] };
         return new Promise((resolve, reject) => {
-            servicio.obtenerPacientes({ "estado": "temporal", "matchSisa": { $exists: false } }, coleccion, 200)
-                .then((res => {
-                    let lista = res;
-                    if (lista) {
-                        lista.forEach(paciente => {
-                            arrayPromise.push(this.matchSisa(paciente));
-                        })
-                    }
-                    Promise.all(arrayPromise).then(values => {
-                        var listaPacientes = values;
-                        console.log('Total Pacientes a Actualizar', listaPacientes.length);
-                        mongodb.MongoClient.connect(url, function(err, db) {
-                            if (listaPacientes) {
-                                listaPacientes.forEach(p => {
-                                    console.log(p[0], p[1]);
-                                    let match = p[1];
-                                    let pacienteSisa = p[2];
-                                    if (pacienteSisa) {
-                                        console.log(pacienteSisa);
+        mongodb.MongoClient.connect(url, function(err, db) {
+            if (err) {
+                console.log('Error al conectarse a Base de Datos: ', err);
+                reject(err);
+            }
+            var cursorStream = db.collection(coleccion).find(condicion).stream().limit(limite);
+            console.log('Conectado a url', url);
+            cursorStream.on('end', function() {
+                console.log("El proceso de actualización ha finalizado");
+                db.close();
+                resolve();
+            });
+            cursorStream.on('data', function(data) {
+                if (data != null) {
+                    cursorStream.pause();
+                    let paciente = data;
+                    // Se realiza una pausa para realizar la consulta a Sisa
+                    setTimeout(function() {
+                        this.matchSisa(paciente).then(res => {
+                            let match = res[1];
+                            let pacienteSisa = res[2];
+                            if (match >= 0.99) {
+                                console.log("Match", match);
+                                db.collection(coleccion).updateOne(res[0], {
+                                    $addToSet: { "entidadesValidadoras": "Sisa" },
+                                    $set: {
+                                        estado: "validado"
                                     }
-                                    if (match >= 0.99) {
-                                        console.log('Dir', "Match", match);
-                                        db.collection(coleccion).updateOne(p[0], {
-                                            $addToSet: { "entidadesValidadoras": "Sisa" },
-                                            $set: {
-                                                estado: "validado"
-                                            }
-                                        }, function(err, item) {
-                                            if (err) {
-                                                reject(err);
-                                            } else {
-                                                db.close();
-                                                resolve(item);
-                                            }
-
-                                        });
+                                }, function(err, item) {
+                                    if (err) {
+                                        console.log("Error al actualizar Paciente", err);
                                     }
-                                    else {
-                                        db.collection(coleccion).updateOne(p[0], {
-                                            $set: {
-                                                matchSisa: match
-                                            }
-                                        }, function(err, item) {
-                                            if (err) {
-                                                reject(err);
-                                            } else {
-                                                resolve(item);
-                                                db.close();
-                                            }
-                                        });
-                                    }
-
-
-
-                                })
+                                });
                             }
+                            else {
+                                db.collection(coleccion).updateOne(res[0], {
+                                    $set: {
+                                        "entidadesValidadoras": "Sisa | " + match.toString()
+                                    }
+                                }, function(err, item) {
+                                    if (err) {
+                                      console.log("Error al actualizar Paciente", err);
+                                    }
+                                });
+                            }
+                        })
+                        cursorStream.resume();
+                    }, 20);
 
-                        });
+                }
+            })
+        });
+      })
 
-                    })
-
-
-                }))
-                .catch((err => {
-                    console.log('Error al obtener los pacientes', err);
-                    reject(err);
-                }))
-        })
     }
+
+    // asignarMatchSisa() {
+    //     /* Se recorren los pacientes en migracion para asignarles el matcheo con Sisa */
+    //     var arrayPromise = [];
+    //     var url = config.urlMigracion;
+    //     var cant = 0;
+    //     var matchPorcentaje;
+    //     var pacienteSisa;
+    //     var coleccion = "pacienteSips";
+    //
+    //
+    //     return new Promise((resolve, reject) => {
+    //         servicio.obtenerPacientes({ "estado": "temporal", "matchSisa": { $exists: false } }, coleccion, 200)
+    //             .then((res => {
+    //                 let lista = res;
+    //                 if (lista) {
+    //                     lista.forEach(paciente => {
+    //                         arrayPromise.push(this.matchSisa(paciente));
+    //                     })
+    //                 }
+    //                 Promise.all(arrayPromise).then(values => {
+    //                     var listaPacientes = values;
+    //                     console.log('Total Pacientes a Actualizar', listaPacientes.length);
+    //                     mongodb.MongoClient.connect(url, function(err, db) {
+    //                         if (listaPacientes) {
+    //                             listaPacientes.forEach(p => {
+    //                                 console.log(p[0], p[1]);
+    //                                 let match = p[1];
+    //                                 let pacienteSisa = p[2];
+    //                                 if (pacienteSisa) {
+    //                                     console.log(pacienteSisa);
+    //                                 }
+    //                                 if (match >= 0.99) {
+    //                                     console.log('Dir', "Match", match);
+    //                                     db.collection(coleccion).updateOne(p[0], {
+    //                                         $addToSet: { "entidadesValidadoras": "Sisa" },
+    //                                         $set: {
+    //                                             estado: "validado"
+    //                                         }
+    //                                     }, function(err, item) {
+    //                                         if (err) {
+    //                                             reject(err);
+    //                                         } else {
+    //                                             db.close();
+    //                                             resolve(item);
+    //                                         }
+    //
+    //                                     });
+    //                                 }
+    //                                 else {
+    //                                     db.collection(coleccion).updateOne(p[0], {
+    //                                         $set: {
+    //                                             matchSisa: match
+    //                                         }
+    //                                     }, function(err, item) {
+    //                                         if (err) {
+    //                                             reject(err);
+    //                                         } else {
+    //                                             resolve(item);
+    //                                             db.close();
+    //                                         }
+    //                                     });
+    //                                 }
+    //                             })
+    //                         }
+    //
+    //                     });
+    //
+    //                 })
+    //
+    //
+    //             }))
+    //             .catch((err => {
+    //                 console.log('Error al obtener los pacientes', err);
+    //                 reject(err);
+    //             }))
+    //     })
+    // }
 
 
     matchSisa(paciente) {
@@ -111,7 +167,7 @@ export class servicioMatchSisa {
         return new Promise((resolve, reject) => {
 
             if (paciente.documento) {
-                if (paciente.documento.length >= 7) {
+                if (paciente.documento.length >= 6) {
 
                     servSisa.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa)
                         .then((resultado) => {

@@ -1,7 +1,9 @@
 import {
     postPaciente
 } from './postPaciente';
-import  { matching } from "@andes/match/matching";
+import {
+    matching
+} from '@andes/match/matching';
 import * as config from './config';
 import * as mongodb from 'mongodb';
 
@@ -11,37 +13,38 @@ var listaMatch = [];
 var match = new matching();
 var post = new postPaciente();
 let coleccion = "pacienteSips";
-var pacientesInsert = [];
 
 try {
     var arrayPromise = [];
     var url = config.urlMigracion;
-    
-    //Vamos a pasar toda la BD a Andes actualizando 
+
+    // Traigo todos los pacientes que pasaron por la fuente auténtica SISA tanto validados como temporales
+    // La idea es insertarlos en andes y luego con un proceso posterior los validados subirlos a MPI con un proceso que sólo suba los validados
+    // y deje en esta base los temporales
     var condicion = {
-        
-        // $or:[{migrado:false}, {migrado:{$exists:"false"}}]
-        
-        
-        // $or: [{
-        //     "entidadesValidadoras.sisa": {
-        //         $exists: true
-        //     }
-        // }, {
-        //     "matchSisa": {
-        //         $exists: true
-        //     }
-        // }]
-    };
+        $or: [{
+            "migrado": {
+                $exists: false
+            }
+        }, {
+                "migrado": false
+            }]
+        //"estado":"validado",
+        // , migrado: false
+    }; //"migrado": { $exists: false }
 
-    //Nos conectamos a la base cruda migrada de los efectores
-    mongodb.MongoClient.connect(url, function (err, db) {
+
+    // Nos conectamos a la base cruda migrada de los efectores
+    mongodb.MongoClient.connect(url, function(err, db) {
         if (err) {
-            console.log('Error al conectarse a Base de Datos: ', err)
+            console.log("Error al conectarse a Base de Datos: ", err);
         }
-        var cursorStream = db.collection(coleccion).find(condicion).stream();
 
-        cursorStream.on('data', function (data) {
+
+        var cursorStream = db.collection(coleccion).find(condicion).stream();
+        // Se ejecuta una vez que devuelve todos los documentos
+
+        cursorStream.on('data', function(data) {
 
             if (data != null) {
 
@@ -49,26 +52,30 @@ try {
                 //En caso de encontrar un documento en el bloque que matchea al 100% la función devuelve vacío
                 //En caso contrario devuelve un paciente que se debe insertar
 
-                let listaContactos = [];
-                if (data.contacto) {
-                    data.contacto.forEach((cto) => {
-                        if ((cto.tipo == "Teléfono Fijo") || (cto.tipo == "")) {
-                            cto.tipo = "fijo";
-                        }
-                        if (cto.tipo == "Teléfono Celular") {
-                            cto.tipo = "celular";
-                        }
-                        listaContactos.push(cto);
-                    })
+                // let listaContactos = [];
+                // if (data.contacto) {
+                //     data.contacto.forEach((cto) => {
+                //         if ((cto.tipo == "Teléfono Fijo") || (cto.tipo == "")) {
+                //             cto.tipo = "fijo";
+                //         }
+                //         if (cto.tipo == "Teléfono Celular") {
+                //             cto.tipo = "celular";
+                //         }
+                //         cto.tipo = cto.tipo.toLowerCase();
+                //         listaContactos.push(cto);
+                //     })
+                // }
+                if (!(data.estadoCivil)) {
+                    delete data.estadoCivil;
                 }
                 //console.log('Lista de contacto: ',listaContactos);
-                data.contacto = listaContactos;
+                //data.contacto = listaContactos;
 
                 let listaEntidades = [];
-                if (data.matchSisa){
-                    listaEntidades.push("Sisa|"+data.matchSisa); /* Para aquellos pacientes que pasaron por Sisa pero no validaron en menor % */
+                if (data.matchSisa) {
+                    listaEntidades.push("Sisa|" + data.matchSisa); /* Para aquellos pacientes que pasaron por Sisa pero no validaron en menor % */
                 };
-                if (data.entidadesValidadoras){
+                if (data.entidadesValidadoras) {
                     data.entidadesValidadoras.forEach((entidad) => {
                         if (entidad == "Sisa")
                             listaEntidades.push("Sisa|1") /* Valido al 100% */
@@ -80,51 +87,51 @@ try {
                 cursorStream.pause();
 
                 // Restart the stream after 1 miliscecond
-                setTimeout(function () {
-                    buscarBloque(data, "paciente")
-                        .then((res) => {
-                            let paciente = res;
-                            if (!(paciente == {})) {
-                                pacientesInsert.push(paciente);
-                                console.log('paciente en array', pacientesInsert.length);
-
-                                post.cargarUnPacienteAndes(paciente)
-                                    .then((rta) => {
-                                        console.log('Paciente Guardado');
-                                        db.collection(coleccion).updateOne({
-                                            "_id": paciente._id
-                                        }, {
-                                            $set: {
-                                                "migrado": true
-                                            }
-                                        }, function (err, item) {
-                                            if (err) {
-                                                console.log(err);
-                                            } else {
-                                                console.log('Paciente actualizado: ', paciente);
-                                            }
-                                        });
-                                    })
-
-                                    .catch((err) => {
-                                        console.error('Error Post**:', err);
-                                    })
-                            }
+                setTimeout(function() {
+                    //     buscarBloque(data, "paciente")
+                    //         .then((res) => {
+                    //             let paciente = res;
+                    //             if (!(paciente == {})) {
+                    //                 //console.log('paciente en array', pacientesInsert.length);
+                    //                 if (paciente.matchSisa && (paciente.estado == "temporal")) {
+                    //                   paciente.entidadesValidadoras =  ["Sisa |" + paciente.matchSisa.toString()];
+                    //                 }
+                    let paciente = data;
+                    post.cargarUnPacienteAndes(paciente)
+                        .then((rta) => {
+                            db.collection(coleccion).updateOne({
+                                "_id": paciente._id
+                            }, {
+                                    $set: {
+                                        "migrado": true
+                                    }
+                                }, function(err, item) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        console.log('Paciente actualizado: ');
+                                    }
+                                });
                         })
+
                         .catch((err) => {
-                            console.log('dio error el buscar bloque');
-                            console.log('Error al obtener el bloque de pacientes', err)
+                            console.error('Error Post**:', paciente);
                         })
+                    //     }
+                    // })
+                    // .catch((err) => {
+                    //     console.log('dio error el buscar bloque');
+                    //     console.log('Error al obtener el bloque de pacientes', err)
+                    // })
                     cursorStream.resume();
-                }, 100);
+                }, 20);
 
 
             }
         })
 
-        // Se ejecuta una vez que devuelve todos los documentos
-        cursorStream.on('end', function () {
-            console.log('El proceso de actualización ha finalizado', pacientesInsert.length);
+        cursorStream.on('end', function() {
+            console.log('El proceso de actualización ha finalizado');
             // processArray(pacientesInsert, this.insertarPaciente)
             //     .then(function (result) {
             //         console.log(result);
@@ -132,8 +139,9 @@ try {
             //         console.log(reason);
             //     })
 
-            //db.close();
+            db.close();
         });
+
 
     })
 
@@ -157,7 +165,7 @@ function buscarBloque(paciente, coleccionPaciente) {
             "claveBlocking.0": paciente.claveBlocking[0]
         };
         var bloque = [];
-        mongodb.MongoClient.connect(url, function (err, db) {
+        mongodb.MongoClient.connect(url, function(err, db) {
             if (err) {
                 console.log("Error de conexión con ", err);
                 reject(err)
@@ -165,12 +173,12 @@ function buscarBloque(paciente, coleccionPaciente) {
                 var stream = db.collection(coleccionPaciente).find(condicion).stream();
                 let matchPorcentaje = 0;
                 // Execute find on all the documents
-                stream.on('end', function () {
+                stream.on('end', function() {
                     //Se inserta el paciente validado en el repositorio
                     db.close();
                     resolve(paciente);
                 });
-                stream.on('data', function (data) {
+                stream.on('data', function(data) {
                     if (data != null) {
                         let pacienteBloque = data;
                         matchPorcentaje = match.matchPersonas(paciente, pacienteBloque, weights, 'Levenshtein');
@@ -187,15 +195,15 @@ function buscarBloque(paciente, coleccionPaciente) {
 }
 
 function processArray(array, fn) {
-    return array.reduce(function (p, item) {
+    return array.reduce(function(p, item) {
         return p.then(fn);
     }, Promise.resolve());
 }
 
 function insertarPaciente(paciente) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         function delayResolve(data) {
-            setTimeout(function () {
+            setTimeout(function() {
                 // Se realiza el post de paciente y en el resolve devuelve el paciente
                 // Se guarda el paciente a través de la API
                 //console.log('hace insert!!!')
@@ -204,7 +212,7 @@ function insertarPaciente(paciente) {
                         console.log('Paciente Guardado');
                         // Se actualiza el paciente
                         // Se actualiza el paciente como migrado
-                        mongodb.MongoClient.connect(url, function (err, db) {
+                        mongodb.MongoClient.connect(url, function(err, db) {
                             if (err) {
                                 console.log('Error al conectarse a Base de Datos: ', err)
                                 reject(err);
@@ -213,7 +221,7 @@ function insertarPaciente(paciente) {
                                 $set: {
                                     "migrado": true
                                 }
-                            }, function (err, item) {
+                            }, function(err, item) {
                                 if (err) {
                                     console.log(err);
                                 } else {
