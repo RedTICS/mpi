@@ -10,7 +10,7 @@ export class postPaciente {
         return new Promise((resolve, reject) => {
 
             var options = {
-                host:'localhost',
+                host: 'localhost',
                 port: 3002,
                 path: '/api/core/mpi/pacientes',
                 method: 'POST',
@@ -20,7 +20,7 @@ export class postPaciente {
             };
             var jsonData = '';
             var req = http.request(options, function(res) {
-                //console.log("statusCode: ", res.statusCode, 'y el mensaje es', res.statusMessage);
+                console.log("statusCode: ", res.statusCode, 'y el mensaje es', res.statusMessage);
                 res.on('data', function(body) {
                     resolve(body);
                 });
@@ -52,7 +52,7 @@ export class postPaciente {
             };
             var jsonData = '';
             var req = http.request(options, function(res) {
-                //console.log("statusCode: ", res.statusCode, 'y el mensaje es', res.statusMessage);
+                console.log("statusCode: ", res.statusCode, 'y el mensaje es', res.statusMessage);
                 res.on('data', function(body) {
                     resolve(body);
                 });
@@ -67,6 +67,46 @@ export class postPaciente {
         })
 
     }
+
+
+    obtenerPacienteSisa(paciente: any) {
+
+        var lista = '';
+        var options = {
+            host: 'localhost',
+            port: 3002,
+            path: '/api/core/mpi/auditoria/matching/' + paciente._id,
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        return new Promise((resolve, reject) => {
+            var req = http.request(options, function(res) {
+                res.on('data', function(d) {
+                    //console.info('GET de Sisa ' + nroDocumento + ':\n');
+                    if (d.toString())
+                        lista = lista + d.toString();
+                });
+
+                res.on('end', function() {
+                    let listaPacientes = [];
+                    if (lista) {
+                        resolve(lista)
+                    } else {
+                      resolve([]);
+                    }
+
+                });
+
+            });
+            req.write(JSON.stringify({ "op": "validarSisa" }));
+            req.end();
+
+        })
+
+    }
+
 }
 
 

@@ -3,7 +3,7 @@ import {
 } from './postPaciente';
 import {
     matching
-} from './node_modules/andes-match/matching';
+} from '@andes/match/matching';
 import * as config from './config';
 import * as mongodb from 'mongodb';
 
@@ -13,34 +13,34 @@ var listaMatch = [];
 var match = new matching();
 var post = new postPaciente();
 let coleccion = "pacienteSips";
-var pacientesInsert = [];
 
 try {
     var arrayPromise = [];
     var url = config.urlMigracion;
-    //Traigo todos los pacientes que pasaron por la fuente auténtica SISA tanto validados como temporales
+    // Traigo todos los pacientes que pasaron por la fuente auténtica SISA tanto validados como temporales
     // La idea es insertarlos en andes y luego con un proceso posterior los validados subirlos a MPI con un proceso que sólo suba los validados
     // y deje en esta base los temporales
     var condicion = {
         $or: [{
-            "entidadesValidadoras.sisa": {
-                $exists: true
+            "migrado": {
+                $exists: false
             }
         }, {
-            "matchSisa": {
-                $exists: true
-            }
+            "migrado": false
         }]
         //"estado":"validado",
         // , migrado: false
     }; //"migrado": { $exists: false }
 
-    //Nos conectamos a la base cruda migrada de los efectores
+    // Nos conectamos a la base cruda migrada de los efectores
     mongodb.MongoClient.connect(url, function (err, db) {
         if (err) {
-            console.log('Error al conectarse a Base de Datos: ', err)
+            console.log("Error al conectarse a Base de Datos: ", err);
         }
+
+
         var cursorStream = db.collection(coleccion).find(condicion).stream();
+        // Se ejecuta una vez que devuelve todos los documentos
 
         cursorStream.on('data', function (data) {
 
@@ -50,36 +50,41 @@ try {
                 //En caso de encontrar un documento en el bloque que matchea al 100% la función devuelve vacío
                 //En caso contrario devuelve un paciente que se debe insertar
 
-                let listaContactos = [];
-                if (data.contacto) {
-                    data.contacto.forEach((cto) => {
-                        if ((cto.tipo == "Teléfono Fijo") || (cto.tipo == "")) {
-                            cto.tipo = "fijo";
-                        }
-                        if (cto.tipo == "Teléfono Celular") {
-                            cto.tipo = "celular";
-                        }
-                        listaContactos.push(cto);
-                    })
+                // let listaContactos = [];
+                // if (data.contacto) {
+                //     data.contacto.forEach((cto) => {
+                //         if ((cto.tipo == "Teléfono Fijo") || (cto.tipo == "")) {
+                //             cto.tipo = "fijo";
+                //         }
+                //         if (cto.tipo == "Teléfono Celular") {
+                //             cto.tipo = "celular";
+                //         }
+                //         cto.tipo = cto.tipo.toLowerCase();
+                //         listaContactos.push(cto);
+                //     })
+                // }
+                if (!(data.estadoCivil)) {
+                        delete data.estadoCivil;
                 }
 
                 //console.log('Lista de contacto: ',listaContactos);
-                data.contacto = listaContactos;
+                //data.contacto = listaContactos;
 
                 cursorStream.pause();
 
                 // Restart the stream after 1 miliscecond
-                setTimeout(function () {
-                    buscarBloque(data, "paciente")
-                        .then((res) => {
-                            let paciente = res;
-                            if (!(paciente == {})) {
-                                pacientesInsert.push(paciente);
-                                console.log('paciente en array', pacientesInsert.length);
-
+                 setTimeout(function () {
+                //     buscarBloque(data, "paciente")
+                //         .then((res) => {
+                //             let paciente = res;
+                //             if (!(paciente == {})) {
+                //                 //console.log('paciente en array', pacientesInsert.length);
+                //                 if (paciente.matchSisa && (paciente.estado == "temporal")) {
+                //                   paciente.entidadesValidadoras =  ["Sisa |" + paciente.matchSisa.toString()];
+                //                 }
+                                let paciente = data;
                                 post.cargarUnPacienteAndes(paciente)
                                     .then((rta) => {
-                                        console.log('Paciente Guardado');
                                         db.collection(coleccion).updateOne({
                                             "_id": paciente._id
                                         }, {
@@ -90,30 +95,29 @@ try {
                                             if (err) {
                                                 console.log(err);
                                             } else {
-                                                console.log('Paciente actualizado: ', paciente);
+                                                console.log('Paciente actualizado: ');
                                             }
                                         });
                                     })
 
                                     .catch((err) => {
-                                        console.error('Error Post**:', err);
+                                        console.error('Error Post**:', paciente);
                                     })
-                            }
-                        })
-                        .catch((err) => {
-                            console.log('dio error el buscar bloque');
-                            console.log('Error al obtener el bloque de pacientes', err)
-                        })
+                        //     }
+                        // })
+                        // .catch((err) => {
+                        //     console.log('dio error el buscar bloque');
+                        //     console.log('Error al obtener el bloque de pacientes', err)
+                        // })
                     cursorStream.resume();
-                }, 100);
+                }, 20);
 
 
             }
         })
 
-        // Se ejecuta una vez que devuelve todos los documentos
         cursorStream.on('end', function () {
-            console.log('El proceso de actualización ha finalizado', pacientesInsert.length);
+            console.log('El proceso de actualización ha finalizado');
             // processArray(pacientesInsert, this.insertarPaciente)
             //     .then(function (result) {
             //         console.log(result);
@@ -121,8 +125,9 @@ try {
             //         console.log(reason);
             //     })
 
-            //db.close();
+            db.close();
         });
+
 
     })
 

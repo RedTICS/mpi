@@ -2,7 +2,7 @@ import { servicioMongo } from '../extraccionDatos/servicioMongo';
 import {libString} from './libString';
 import * as mongodb from 'mongodb';
 import * as config from './config';
-import  {matchingAndes} from 'andes-match/matchingAndes';
+import  {matchingAndes} from '@andes/match/matching';
 import {postPaciente} from './postPaciente';
 
 
