@@ -7,7 +7,7 @@ import {
 } from './postPaciente';
 let post = new postPaciente();
 
-let limite = 50;
+let limite = 5000;
 var listaPacientes;
 
 let weights = {
@@ -22,11 +22,12 @@ var match = new matching();
 console.log('Se realiza la validación de Pacientes');
 
 let url = config.urlMongoAndes;
-let coleccion = "paciente";
+let coleccion = "pacienteTemp";
 let matchPorcentaje = 0;
 let pacienteSisa = {};
 console.log('Se ingresa a validarPacienteEnSisa');
-let condicion = { $or: [{ "entidadesValidadoras": { $size: 0 } }, { "estado": "temporal" }] };
+//let condicion = { $or: [{ "entidadesValidadoras": { $size: 0 } }, { "estado": "temporal" }] };
+let condicion = { "matchSisa":{ $exists: false },  "estado": "temporal" };
 
 mongodb.MongoClient.connect(url, function(err, db) {
     if (err) {
@@ -80,7 +81,7 @@ mongodb.MongoClient.connect(url, function(err, db) {
 
                 })
                 cursorStream.resume();
-            }, 20);
+            }, 100);
 
         }
     })
