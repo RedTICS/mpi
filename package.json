@@ -27,6 +27,7 @@
   "homepage": "https://github.com/andes/mpi#readme",
   "dependencies": {
     "@andes/match": "^0.1.5",
+    "@andes/auth": "^0.2.4",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "http": "0.0.0",
