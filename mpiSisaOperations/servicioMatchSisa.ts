@@ -52,7 +52,7 @@ export function validarPacienteEnSisa(token) {
                         servSisa.matchSisa(paciente).then(res => {
                             if (res) {
                                 let operationsMpi = new PacienteMpi();
-                                let match = res["matcheos"].matcheo // Valor del matcheo
+                                let match = res["matcheos"].matcheo // Valor del matcheo de sisa
                                 let pacienteSisa = res["paciente"]; //paciente con los datos de Sisa
                                 if (match >= 95) {
                                     //Si el matcheo es mayor a 95% tengo que actualizar los datos en MPI
