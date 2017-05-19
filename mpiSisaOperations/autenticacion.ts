@@ -13,7 +13,6 @@ export function loginApp(datos: any) {
                 'Content-Type': 'application/json',
             }
         };
-        console.log('datos del POST: ', options);
         let req = http.request(options, function (res) {
             res.on('data', function (body) {
                resolve(JSON.parse(body.toString()));

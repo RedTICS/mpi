@@ -20,80 +20,7 @@ let servicio = new servicioBlocking();
 let servSisa = new servicioSisa();
 let match = new matching();
 
-// servicioMatchSisa era el nombre de la clase
-export function validarPacienteEnSisa(token) {
-    let url = config.urlMongoMpi;
-    let urlSisaRejected = config.urlMongoSisaRejected;
-    let coleccion = "paciente";
-    let coleccionRejected = "sisaRejected";
-    // Esta condición es para obtener todos los pacientes que no tengan la entidadValidadora "Sisa" o bien el campo no exista.
-    let condicion = {
-        "entidadesValidadoras": {
-            $nin: ["Sisa"]
-        }
-    }
-    return new Promise((resolve, reject) => {
-        mongodb.MongoClient.connect(url, function (err, db) {
-            if (err) {
-                console.log('Error al conectarse a Base de Datos: ', err);
-                reject(err);
-            } else {
-                let cursorStream = db.collection(coleccion).find(condicion).stream();
-                cursorStream.on('end', function () {
-                    console.log("El proceso de actualización ha finalizado");
-                    db.close();
-                    resolve();
-                });
-                cursorStream.on('data', function (data) {
-                    if (data != null) {
-                        // Se realiza una pausa para realizar la consulta a Sisa
-                        cursorStream.pause();
-                        let paciente: any = data;
-                        servSisa.matchSisa(paciente).then(res => {
-                            if (res) {
-                                let operationsMpi = new PacienteMpi();
-                                let match = res["matcheos"].matcheo // Valor del matcheo de sisa
-                                let pacienteSisa = res["paciente"]; //paciente con los datos de Sisa
-                                if (match >= 95) {
-                                    //Si el matcheo es mayor a 95% tengo que actualizar los datos en MPI
-                                    paciente.nombre = pacienteSisa.nombre;
-                                    paciente.apellido = pacienteSisa.apellido;
-                                } else {
-                                    // insertar en una collection sisaRejected para análisis posterior
-                                    mongodb.MongoClient.connect(url, function (err, db) {
-                                        //Verificamos que el paciente no exista en la collection de rejected!
-                                        db.collection(coleccionRejected).findOne(paciente._id, function (err, patientRejected) {
-                                            if (err) {
-                                                reject(err);
-                                            } else {
-                                                console.log('el pacienet rejectado: ', patientRejected);
-                                                if (!patientRejected) {
-                                                    db.collection(coleccionRejected).insert(paciente);
-                                                }
-                                            }
-                                            db.close();
-                                        });
-                                    })
-                                }
-                                //Siempre marco que paso por sisa
-                                paciente.entidadesValidadoras.push('Sisa');
-                                //Hacemos el update en el repositorio MPI
-                                operationsMpi.actualizaUnPacienteMpi(paciente, token)
-                                    .then((rta) => {
-                                        console.log('El paciente de MPI ha sido corregido por SISA: ', paciente);
-                                    });
-                            }
-                        })
-                        resolve();
-                        cursorStream.resume(); //Reanudamos el proceso
-                    }
-                })
-            }
 
-        });
-    })
-
-}
 // Función de algoritmo de matcheo para servicio de sisa
 function matchSisa(paciente) {
     //Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
@@ -175,5 +102,86 @@ function matchSisa(paciente) {
                 _id: paciente._id
             }, matchPorcentaje, {}]);
         }
+    })
+}
+
+
+
+
+// servicioMatchSisa era el nombre de la clase
+export function validarPacienteEnSisa(token) {
+    let url = config.urlMongoMpi;
+    let urlSisaRejected = config.urlMongoSisaRejected;
+    let coleccion = "paciente";
+    let coleccionRejected = "sisaRejected";
+    // Esta condición es para obtener todos los pacientes que no tengan la entidadValidadora "Sisa" o bien el campo no exista.
+
+    return new Promise((resolve, reject) => {
+        try {
+            let condicion = {
+                "entidadesValidadoras": {
+                    $nin: ["Sisa"]
+                }
+            }
+            mongodb.MongoClient.connect(url, function (err, db) {
+                if (err) {
+                    console.log('Error al conectarse a Base de Datos: ', err);
+                    reject(err);
+                } else {
+                    let cursorStream = db.collection(coleccion).find(condicion).stream();
+                    cursorStream.on('end', function () {
+                        resolve('');
+                        db.close(); //Cerramos la conexión a la bd de MPI
+                    });
+                    cursorStream.on('data', function (data) {
+                        if (data != null) {
+                            // Se realiza una pausa para realizar la consulta a Sisa
+                            cursorStream.pause();
+                            let paciente: any = data;
+                            servSisa.matchSisa(paciente).then(res => {
+                                if (res) {
+                                    let operationsMpi = new PacienteMpi();
+                                    let match = res["matcheos"].matcheo // Valor del matcheo de sisa
+                                    let pacienteSisa = res["paciente"]; //paciente con los datos de Sisa
+                                    if (match >= 95) {
+                                        //Si el matcheo es mayor a 95% tengo que actualizar los datos en MPI
+                                        paciente.nombre = pacienteSisa.nombre;
+                                        paciente.apellido = pacienteSisa.apellido;
+                                    } else {
+                                        // insertar en una collection sisaRejected para análisis posterior
+                                        mongodb.MongoClient.connect(url, function (err, db2) {
+                                            //Verificamos que el paciente no exista en la collection de rejected!
+                                            db2.collection(coleccionRejected).findOne(paciente._id, function (err, patientRejected) {
+                                                if (err) {
+                                                    reject(err);
+                                                } else {
+                                                    if (!patientRejected) {
+                                                        db2.collection(coleccionRejected).insert(paciente);
+                                                    }
+                                                }
+                                                db2.close(); //Cerramos la conexión a la db de rejected patient
+                                            });
+                                        })
+                                    }
+                                    //Siempre marco que paso por sisa
+                                    paciente.entidadesValidadoras.push('Sisa');
+                                    //Hacemos el update en el repositorio MPI
+                                    operationsMpi.actualizaUnPacienteMpi(paciente, token)
+                                        .then((rta) => {
+                                            console.log('El paciente de MPI ha sido corregido por SISA: ', paciente);
+                                        });
+                                }
+                            })
+                            resolve('');
+                            cursorStream.resume(); //Reanudamos el proceso
+                        }
+                    })
+                }
+
+            });
+        } catch (err) {
+            console.log('Error catch:', err);
+            reject(err);
+        };
     })
 }
