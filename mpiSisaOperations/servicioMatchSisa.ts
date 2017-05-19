@@ -105,33 +105,31 @@ function matchSisa(paciente) {
     })
 }
 
-
-
-
 // servicioMatchSisa era el nombre de la clase
 export function validarPacienteEnSisa(token) {
     let url = config.urlMongoMpi;
     let urlSisaRejected = config.urlMongoSisaRejected;
-    let coleccion = "paciente";
-    let coleccionRejected = "sisaRejected";
+    let coleccion = 'paciente';
+    let coleccionRejected = 'sisaRejected';
     // Esta condición es para obtener todos los pacientes que no tengan la entidadValidadora "Sisa" o bien el campo no exista.
-
     return new Promise((resolve, reject) => {
         try {
             let condicion = {
-                "entidadesValidadoras": {
-                    $nin: ["Sisa"]
+                'entidadesValidadoras': {
+                    $nin: ['Sisa']
                 }
-            }
+            };
+
             mongodb.MongoClient.connect(url, function (err, db) {
                 if (err) {
                     console.log('Error al conectarse a Base de Datos: ', err);
-                    reject(err);
+                    db.close();
+                    reject('error');
                 } else {
                     let cursorStream = db.collection(coleccion).find(condicion).stream();
                     cursorStream.on('end', function () {
-                        resolve('');
                         db.close(); //Cerramos la conexión a la bd de MPI
+                        resolve('fin');
                     });
                     cursorStream.on('data', function (data) {
                         if (data != null) {
@@ -169,19 +167,19 @@ export function validarPacienteEnSisa(token) {
                                     operationsMpi.actualizaUnPacienteMpi(paciente, token)
                                         .then((rta) => {
                                             console.log('El paciente de MPI ha sido corregido por SISA: ', paciente);
+                                            cursorStream.resume(); //Reanudamos el proceso
                                         });
                                 }
+                               
                             })
-                            resolve('');
-                            cursorStream.resume(); //Reanudamos el proceso
                         }
                     })
                 }
-
             });
         } catch (err) {
             console.log('Error catch:', err);
-            reject(err);
+            reject('error');
         };
+
     })
 }
