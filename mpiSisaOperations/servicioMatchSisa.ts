@@ -60,9 +60,20 @@ export function validarPacienteEnSisa(token) {
                                     paciente.apellido = pacienteSisa.apellido;
                                 } else {
                                     // insertar en una collection sisaRejected para análisis posterior
-                                     mongodb.MongoClient.connect(url, function (err, db) {
-                                         db.collection(coleccionRejected).insert(paciente);
-                                     })
+                                    mongodb.MongoClient.connect(url, function (err, db) {
+                                        //Verificamos que el paciente no exista en la collection de rejected!
+                                        db.collection(coleccionRejected).findOne(paciente._id, function (err, patientRejected) {
+                                            if (err) {
+                                                reject(err);
+                                            } else {
+                                                console.log('el pacienet rejectado: ', patientRejected);
+                                                if (!patientRejected) {
+                                                    db.collection(coleccionRejected).insert(paciente);
+                                                }
+                                            }
+                                            db.close();
+                                        });
+                                    })
                                 }
                                 //Siempre marco que paso por sisa
                                 paciente.entidadesValidadoras.push('Sisa');
