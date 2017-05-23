@@ -127,10 +127,15 @@ export function validarPacienteEnSisa(token) {
                     reject('error');
                 } else {
                     let cursorStream = db.collection(coleccion).find(condicion).stream();
+                    let myData = cursorStream.toArray;
                     cursorStream.on('end', function () {
                         db.close(); //Cerramos la conexión a la bd de MPI
                         resolve('fin');
-                    });
+                    })
+                    cursorStream.on('error', function (){
+                        db.close(); // Cerramos la bd y rejectamos el error que pudiera haber
+                        reject('error mongo stream');
+                    })
                     cursorStream.on('data', function (data) {
                         if (data != null) {
                             // Se realiza una pausa para realizar la consulta a Sisa
@@ -169,6 +174,7 @@ export function validarPacienteEnSisa(token) {
                                             console.log('El paciente de MPI ha sido corregido por SISA: ', paciente);
                                             cursorStream.resume(); //Reanudamos el proceso
                                         });
+                                        
                                 }
                                
                             })
