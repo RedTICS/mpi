@@ -145,9 +145,10 @@ export function validarPacienteEnSisa(token) {
                                 if (res) {
                                     let operationsMpi = new PacienteMpi();
                                     let match = res["matcheos"].matcheo // Valor del matcheo de sisa
-                                    let pacienteSisa = res["paciente"]; //paciente con los datos de Sisa
+                                    let pacienteSisa = res["matcheos"].datosPaciente; //paciente con los datos de Sisa originales
                                     if (match >= 95) {
                                         //Si el matcheo es mayor a 95% tengo que actualizar los datos en MPI
+                                        console.log('apellido y nombres segun sisa: ', pacienteSisa.nombre + ' ' + pacienteSisa.apellido);
                                         paciente.nombre = pacienteSisa.nombre;
                                         paciente.apellido = pacienteSisa.apellido;
                                     } else {
@@ -168,6 +169,7 @@ export function validarPacienteEnSisa(token) {
                                     }
                                     //Siempre marco que paso por sisa
                                     paciente.entidadesValidadoras.push('Sisa');
+                                    console.log('El paciente actualizado: ',paciente);
                                     //Hacemos el update en el repositorio MPI
                                     operationsMpi.actualizaUnPacienteMpi(paciente, token)
                                         .then((rta) => {
